@@ -1,0 +1,62 @@
+{
+  "_note": "LoRAs by name. These four are built in (see docs/models.md); your own go in models/loras/ and are used the same way (see configs/your-files/). A built-in LoRA's trigger word is added to the prompt for you; `trigger` sets it for any LoRA. Here every job lists its own LoRAs to show the forms; to share LoRAs across jobs put `loras` in `defaults` - see configs/full.json.",
+  "output": "lora-tour",
+  "defaults": {
+    "model": "zimage",
+    "seed": 1
+  },
+  "jobs": [
+    {
+      "name": "plain",
+      "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter."
+    },
+    {
+      "_note": "Short form: full strength (1.0).",
+      "name": "pixel-art",
+      "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter.",
+      "loras": [
+        "zimage-pixel-art"
+      ]
+    },
+    {
+      "_note": "Long form: choose the strength.",
+      "name": "pixel-art-soft",
+      "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter.",
+      "loras": [
+        {
+          "name": "zimage-pixel-art",
+          "scale": 0.6
+        }
+      ]
+    },
+    {
+      "_note": "The full form: name, scale and trigger. `trigger` words are put in front of the prompt. A built-in LoRA already knows its trigger; give one here to use other words, or \"\" to add none. For your own LoRA (a file in models/loras/ or an address) this is where its trigger goes.",
+      "name": "pixel-art-own-trigger",
+      "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter.",
+      "loras": [
+        {
+          "name": "zimage-pixel-art",
+          "scale": 0.8,
+          "trigger": "Pixel art style, 16-bit game screenshot"
+        }
+      ]
+    },
+    {
+      "_note": "Several LoRAs are applied in order. A LoRA must be for the same engine as the model.",
+      "name": "anime-stack",
+      "model": "illustrious",
+      "aspect": "3:4",
+      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light",
+      "loras": [
+        {
+          "name": "illustrious-niji",
+          "scale": 0.7
+        },
+        {
+          "name": "illustrious-the-artist",
+          "scale": 0.5
+        }
+      ]
+    }
+  ]
+}

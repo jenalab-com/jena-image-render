@@ -1,0 +1,21 @@
+# your settings (personal paths, private storage URLs, keys)
+.env
+runpod.json
+
+# model weights (the folder layout and its README are tracked)
+models/**
+!models/
+!models/README.md
+!models/*/
+!models/*/.gitkeep
+
+# working state and results
+.jena/
+outputs/
+
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+.ruff_cache/
+.DS_Store

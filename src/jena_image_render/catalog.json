@@ -1,0 +1,187 @@
+{
+  "_note": "Built-in catalog: official releases and example LoRAs, pinned Hugging Face files. Always loaded; a name found here is never looked up in the models folder. Each model and LoRA has its own license (see docs/models.md).",
+  "version": 1,
+  "models": {
+    "zimage": {
+      "engine": "zimage",
+      "files": {
+        "diffusion": {
+          "source": "hf://Comfy-Org/Z-Image-Turbo@6fc90a3b1b653e935a0d175e260736de25b84df5/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+          "sha256": "2407613050b809ffdff18a4ac99af83ea6b95443ecebdf80e064a79c825574a6",
+          "size": 12309866400
+        },
+        "text_encoder": {
+          "source": "hf://Comfy-Org/Z-Image-Turbo@6fc90a3b1b653e935a0d175e260736de25b84df5/split_files/text_encoders/qwen_3_4b.safetensors",
+          "sha256": "6c671498573ac2f7a5501502ccce8d2b08ea6ca2f661c458e708f36b36edfc5a",
+          "size": 8044982048
+        },
+        "vae": {
+          "source": "hf://Comfy-Org/Z-Image-Turbo@6fc90a3b1b653e935a0d175e260736de25b84df5/split_files/vae/ae.safetensors",
+          "sha256": "afc8e28272cd15db3919bacdb6918ce9c1ed22e96cb12c4d5ed0fba823529e38",
+          "size": 335304388
+        }
+      }
+    },
+    "krea2": {
+      "engine": "krea2",
+      "files": {
+        "diffusion": {
+          "source": "hf://Comfy-Org/Krea-2@eb1eddd3983a54678545a9b2c178c5853b30f7be/diffusion_models/krea2_turbo_int8_convrot.safetensors",
+          "sha256": "8e4eeda70dd5037ab1ba2bef6b417f9f901e26093117cf397f741fc1fdaaf3f1",
+          "size": 13492686496
+        },
+        "text_encoder": {
+          "source": "hf://Comfy-Org/Krea-2@eb1eddd3983a54678545a9b2c178c5853b30f7be/text_encoders/qwen3vl_4b_bf16.safetensors",
+          "sha256": "36f3ff447ef59201722e8f9ce6020c9819fdcfba6aa2608c4e09b1c0ce114e34",
+          "size": 8875719384
+        },
+        "vae": {
+          "source": "hf://Comfy-Org/Krea-2@eb1eddd3983a54678545a9b2c178c5853b30f7be/vae/qwen_image_vae.safetensors",
+          "sha256": "a70580f0213e67967ee9c95f05bb400e8fb08307e017a924bf3441223e023d1f",
+          "size": 253806246
+        }
+      }
+    },
+    "qwen": {
+      "engine": "qwen",
+      "files": {
+        "diffusion": {
+          "source": "hf://Comfy-Org/Qwen-Image-2.1@cb504a4090723e43f17ad01cec0359490e2de613/diffusion_models/qwen_image_2.1_bf16.safetensors",
+          "sha256": "89f4158d066cc33906a199fca85634f766892dd78f49b6698dabf187ac86c4bc",
+          "size": 14230280616
+        },
+        "text_encoder": {
+          "source": "hf://Comfy-Org/Qwen-Image-2.1@cb504a4090723e43f17ad01cec0359490e2de613/text_encoders/qwen3vl_8b_bf16.safetensors",
+          "sha256": "68bdc82bc1b66851162ae656225e7e2068166b603db19bd5d5a3b90eb12669a9",
+          "size": 17534334616
+        },
+        "vae": {
+          "source": "hf://Comfy-Org/Qwen-Image-2.1@cb504a4090723e43f17ad01cec0359490e2de613/vae/qwen_image_2.1_vae_bf16.safetensors",
+          "sha256": "bb21f7473051e1ac368515dd3f2e15cd44d7a11748ee8823e1ddca3e4876b7c9",
+          "size": 675509688
+        }
+      }
+    },
+    "klein-4b": {
+      "engine": "klein",
+      "files": {
+        "diffusion": {
+          "source": "hf://Comfy-Org/Flux-2-Klein-4B@5f526678002e43af5551dadb73ce2e8c91b43afe/split_files/diffusion_models/flux-2-klein-4b.safetensors",
+          "sha256": "ec3d4e733a771f61c052fb4856c48b336c55eaf2c65487c2a1faeb9bbda7a343",
+          "size": 7751105712
+        },
+        "text_encoder": {
+          "source": "hf://Comfy-Org/Flux-2-Klein-4B@5f526678002e43af5551dadb73ce2e8c91b43afe/split_files/text_encoders/qwen_3_4b.safetensors",
+          "sha256": "6c671498573ac2f7a5501502ccce8d2b08ea6ca2f661c458e708f36b36edfc5a",
+          "size": 8044982048
+        },
+        "vae": {
+          "source": "hf://Comfy-Org/Flux-2-Dev@ed33133cd56476eac818c0943b6f9419b3e4a3a1/split_files/vae/flux2-vae.safetensors",
+          "sha256": "d64f3a68e1cc4f9f4e29b6e0da38a0204fe9a49f2d4053f0ec1fa1ca02f9c4b5",
+          "size": 336213556
+        }
+      }
+    },
+    "illustrious": {
+      "engine": "illustrious",
+      "files": {
+        "checkpoint": {
+          "source": "hf://OnomaAIResearch/Illustrious-xl-early-release-v0@dca0dac303e6dc4b0c31d8001bc685b89b5d0204/Illustrious-XL-v0.1.safetensors",
+          "sha256": "3e15ba00387db678ab4a099f75771c4f5ac67fda9e7100a01d263eaf30145aa9",
+          "size": 6938040760
+        }
+      }
+    }
+  },
+  "loras": {
+    "zimage-pixel-art": {
+      "engine": "zimage",
+      "file": {
+        "source": "hf://tarn59/pixel_art_style_lora_z_image_turbo@0a5092d1619664d94a5a36784f92db84b3ae62bd/pixel_art_style_z_image_turbo.safetensors",
+        "sha256": "09b1b45ceed0202929bca528e51b50208d0160f4e9d2ba0f42cb7e739a43577f",
+        "size": 170128328
+      },
+      "trigger": "Pixel art style"
+    },
+    "zimage-technicolor": {
+      "engine": "zimage",
+      "file": {
+        "source": "hf://renderartist/Technically-Color-Z-Image-Turbo@193838d6d10d552514d51105fa1c07e4a7bbd7e6/Technically_Color_Z_Image_Turbo_v1_renderartist_2000.safetensors",
+        "sha256": "650539cfed33adc2b611968c8cd2bb35c269bb8b1acfbfd58eed2c8978d1c55e",
+        "size": 255161456
+      },
+      "trigger": "t3chnic4lly"
+    },
+    "krea2-retro-anime": {
+      "engine": "krea2",
+      "file": {
+        "source": "hf://krea/Krea-2-LoRA-retroanime@23336fcff3bac43028918a2df795fbb63fdc1ff3/retroanime.safetensors",
+        "sha256": "ca42107783d9e517c5d62cb9a9db9ab2ba4887d90e9dad97a9d1a7fe6ff14c56",
+        "size": 469291992
+      },
+      "trigger": "Purple retro anime style"
+    },
+    "krea2-watercolor": {
+      "engine": "krea2",
+      "file": {
+        "source": "hf://krea/Krea-2-LoRA-softwatercolor@12ff680b14a869b0e72f225bbdb237ad244b6a94/softwatercolor.safetensors",
+        "sha256": "3805e8655f19fbcac116542685e3f78f3a642e8fbfb857b5352bb32a4b3d445a",
+        "size": 469291992
+      },
+      "trigger": "Art Deco watercolor style"
+    },
+    "qwen-lightning": {
+      "engine": "qwen",
+      "file": {
+        "source": "hf://lightx2v/Qwen-Image-2.1-Lightning@6b0a1176327c01522a44276c5da67331a025b6fc/pytorch_lora_weights.safetensors",
+        "sha256": "53c69320d4163da51032f90275074028cb098556039c72b45f8dce9f0f9e34a3",
+        "size": 67144280,
+        "name": "qwen-image-2.1-lightning-4step.safetensors"
+      }
+    },
+    "qwen-anime-fusal": {
+      "engine": "qwen",
+      "file": {
+        "source": "hf://MicksHF/Qwen-Image-2.1-Anime-Fusal@dd66651616ec3a689e5fdbfd2e63f60c3723c9bc/fusal-qwen-image-2.1-v2-exact-r80.safetensors",
+        "sha256": "4f73da215cf1d18d99882548302b658002600c09b69e992f9fd8199ab8816337",
+        "size": 419491096
+      },
+      "trigger": "fusal style."
+    },
+    "klein-anime": {
+      "engine": "klein",
+      "file": {
+        "source": "hf://Sawata97/flux2_4b_koni_animestyle@b392813770c6155d3ae22d3fb8062f247f5108a2/Flux_klein_4b_anime_Koni.safetensors",
+        "sha256": "c5f8fef8610f8f7725ab4da0410ff6ffb09542e9a65676ebcf01527eb3af429f",
+        "size": 184832664
+      },
+      "trigger": "anime_style"
+    },
+    "klein-mikkoani": {
+      "engine": "klein",
+      "file": {
+        "source": "hf://mikkoph/mikkoani-klein4b@2429707d188e1c366fc9fad14a88516b931c4b30/klein4b-mikkoani.safetensors",
+        "sha256": "221bed696fde877082fa1e264d633082577ca49810a060b5baf330e128169fb4",
+        "size": 92436112
+      }
+    },
+    "illustrious-niji": {
+      "engine": "illustrious",
+      "file": {
+        "source": "hf://LyliaEngine/Midjourney_Niji_Anime@659f639b004fc6cb7eae10b0f03e815b9e1fe116/Midjourney_Niji_Anime.safetensors",
+        "sha256": "ef4ede9ee821c4ebe268a699aae740eb49101ccb251c542411bcc1dde00a422f",
+        "size": 228467516
+      },
+      "trigger": "midniji"
+    },
+    "illustrious-the-artist": {
+      "engine": "illustrious",
+      "file": {
+        "source": "hf://robb-0/TheArtist-Style-IllustriousXL@f3a1636c6fe52fe8f2f0f754671b66f5a1f32f65/The Artist - Style for Illustrious XL.safetensors",
+        "sha256": "d8edcf42c0fcab9d4448013a6f6fe2c446870e2b5c52b2b036c315dca8084cac",
+        "size": 212150652,
+        "name": "the-artist-illustrious-xl.safetensors"
+      }
+    }
+  }
+}

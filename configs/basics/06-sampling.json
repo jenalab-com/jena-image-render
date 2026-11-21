@@ -1,0 +1,54 @@
+{
+  "_note": "Sampling settings: `steps`, `cfg` (CFG scale), `sampler`, `scheduler`, `negative`. Every engine has tested defaults (`jenair engines` lists them), so most jobs need none of this. To set them once for a whole file put them in `defaults` - see configs/full.json.",
+  "output": "sampling",
+  "jobs": [
+    {
+      "_note": "illustrious (SDXL) uses a negative prompt and CFG. A sampler name from a model card (Euler a, DPM++ 2M Karras, ...) works as it is and already includes its scheduler: do not add `scheduler` to it (an explicit `scheduler` always wins).",
+      "name": "sdxl-settings",
+      "model": "illustrious",
+      "aspect": "3:4",
+      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light",
+      "negative": "lowres, bad anatomy, bad hands, watermark, text",
+      "steps": 24,
+      "sampler": "DPM++ 2M Karras",
+      "cfg": 5.5
+    },
+    {
+      "_note": "The same with ComfyUI's own names.",
+      "name": "sdxl-comfy-names",
+      "model": "illustrious",
+      "aspect": "3:4",
+      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light",
+      "negative": "lowres, bad anatomy, bad hands, watermark, text",
+      "steps": 24,
+      "cfg": 5.5,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras"
+    },
+    {
+      "_note": "krea2 runs at CFG 1 (turbo) and ignores `negative` there. Raise cfg above 1 to use a negative prompt; it then takes about twice as long per image.",
+      "name": "krea2-negative",
+      "model": "krea2",
+      "prompt": "A rainy neon-lit street at night, reflections on wet asphalt, people with umbrellas, cinematic wide shot.",
+      "negative": "blurry, text, watermark",
+      "cfg": 2.5
+    },
+    {
+      "_note": "A speed LoRA changes how many steps are needed: 4 instead of qwen's 25.",
+      "name": "qwen-4-steps",
+      "model": "qwen",
+      "prompt": "Black ink illustration of a lighthouse on a cliff during a storm, bold brush strokes, white paper background.",
+      "steps": 4,
+      "loras": [
+        "qwen-lightning"
+      ]
+    },
+    {
+      "_note": "zimage, qwen and klein are distilled: CFG is fixed at 1 and there is no negative prompt. Only `steps` and `sampler` apply.",
+      "name": "zimage-more-steps",
+      "model": "zimage",
+      "steps": 12,
+      "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter."
+    }
+  ]
+}

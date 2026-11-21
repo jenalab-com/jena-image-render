@@ -1,0 +1,6 @@
+{
+  "_note": "`target` is where the file renders. Without it (as in every other example) jobs go to your own ComfyUI: \"local\". With ComfyUI on this computer the models are downloaded into it on the first run (zimage is about 20 GB; --no-download turns that off). Change it to \"runpod\" to rent a GPU for this file instead - useful without an NVIDIA card; needs RUNPOD_API_KEY in .env. To make RunPod your default for every file, put JENA_TARGET=runpod in .env. A command-line --local or --runpod always wins.",
+  "target": "local",
+  "model": "zimage",
+  "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter."
+}

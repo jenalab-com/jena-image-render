@@ -1,0 +1,27 @@
+{
+  "_note": "Your own LoRA on a built-in model. Put it at models/loras/my-lora.safetensors (any engine), or at models/loras/zimage/my-lora.safetensors to have it checked against the engine. `trigger` is the LoRA's trigger word: it is put in front of the prompt for you, so the prompts stay clean. Here it is `mylora`.",
+  "defaults": {
+    "model": "zimage",
+    "seeds": [
+      1,
+      2
+    ]
+  },
+  "jobs": [
+    {
+      "name": "without",
+      "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter."
+    },
+    {
+      "name": "with",
+      "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter.",
+      "loras": [
+        {
+          "name": "my-lora",
+          "scale": 0.8,
+          "trigger": "mylora"
+        }
+      ]
+    }
+  ]
+}

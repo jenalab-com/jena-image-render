@@ -1,0 +1,26 @@
+{
+  "_note": "`model` may be a list: every job renders on every model with every seed (2 prompts x 3 models x 2 seeds = 12 images), each model in its own folder. Remove a model from the list to skip it. A LoRA belongs to one engine, so with a list of different engines give LoRAs per job with one model each - configs/full.json shows how.",
+  "output": "compare",
+  "defaults": {
+    "model": [
+      "zimage",
+      "krea2",
+      "klein-4b"
+    ],
+    "seeds": [
+      1,
+      2
+    ],
+    "aspect": "1:1"
+  },
+  "jobs": [
+    {
+      "name": "cafe",
+      "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter."
+    },
+    {
+      "name": "street",
+      "prompt": "A rainy neon-lit street at night, reflections on wet asphalt, people with umbrellas, cinematic wide shot."
+    }
+  ]
+}

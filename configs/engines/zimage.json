@@ -1,0 +1,30 @@
+{
+  "_note": "Z-Image Turbo: fast (9 steps), no negative prompt. One plain image and the same scene with two built-in LoRAs.",
+  "output": "zimage-example",
+  "defaults": {
+    "model": "zimage"
+  },
+  "jobs": [
+    {
+      "name": "cafe",
+      "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter, film photograph, soft grain."
+    },
+    {
+      "name": "cafe-pixel-art",
+      "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter.",
+      "loras": [
+        "zimage-pixel-art"
+      ]
+    },
+    {
+      "name": "cafe-technicolor",
+      "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter, a waitress in a red apron wiping the counter.",
+      "loras": [
+        {
+          "name": "zimage-technicolor",
+          "scale": 0.8
+        }
+      ]
+    }
+  ]
+}

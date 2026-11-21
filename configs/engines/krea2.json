@@ -1,0 +1,36 @@
+{
+  "_note": "Krea 2 Turbo: photographic, 8 steps. Two plain scenes x 2 seeds, then the same scenes with two official Krea LoRAs.",
+  "output": "krea2-example",
+  "defaults": {
+    "model": "krea2",
+    "aspect": "3:2",
+    "seeds": [
+      1,
+      2
+    ]
+  },
+  "jobs": [
+    {
+      "name": "harbor",
+      "prompt": "A small fishing harbor on an overcast morning, wet stone pier, ropes and buoys, muted colors, documentary photograph."
+    },
+    {
+      "name": "greenhouse",
+      "prompt": "Inside an old glass greenhouse full of ferns and orchids, diffused light, drops of water on the panes, detailed and calm."
+    },
+    {
+      "name": "harbor-retro-anime",
+      "prompt": "A small fishing harbor on an overcast morning, wet stone pier, ropes and buoys, a fisherman mending a net.",
+      "loras": [
+        "krea2-retro-anime"
+      ]
+    },
+    {
+      "name": "greenhouse-watercolor",
+      "prompt": "Inside an old glass greenhouse full of ferns and orchids, a watering can on a wooden bench.",
+      "loras": [
+        "krea2-watercolor"
+      ]
+    }
+  ]
+}

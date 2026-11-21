@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jena-image-render"
+version = "0.1.0"
+description = "ComfyUI without the wires: write prompts in JSON, render batches across many models, locally or on RunPod."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31",
+    "websocket-client>=1.7",
+    "certifi",
+    "huggingface_hub>=0.24",  # JENA_STORAGE=hf://owner/repo
+]
+keywords = ["comfyui", "runpod", "image-generation", "batch", "flux", "qwen-image", "z-image"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia :: Graphics",
+]
+
+[project.urls]
+Homepage = "https://github.com/jenalab-com/jena-image-render"
+
+[project.scripts]
+jenair = "jena_image_render.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+jena_image_render = ["catalog.json"]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]

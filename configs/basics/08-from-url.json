@@ -1,0 +1,39 @@
+{
+  "_note": "Files that live online, written straight into the job: no download step, no setup. A LoRA, a checkpoint and a model can each be an address: hf://owner/repo/path/in/repo or any https:// URL. hf:// reads the repo's main branch; add @revision (hf://owner/repo@<commit>/path) to pin the exact file. For a private or gated Hugging Face repo set HF_TOKEN in .env. On RunPod the pod downloads these files itself; for your own ComfyUI, `jenair pull configs/basics/08-from-url.json` downloads them into the models folder first.",
+  "output": "from-url",
+  "defaults": {
+    "seed": 1
+  },
+  "jobs": [
+    {
+      "_note": "A LoRA by address, here one of Krea's official style LoRAs that is not built in. A LoRA given by address has no engine check and knows no trigger word, so give its `trigger` here.",
+      "name": "lora",
+      "model": "krea2",
+      "prompt": "Inside an old glass greenhouse full of ferns and orchids, a watering can on a wooden bench.",
+      "loras": [
+        {
+          "name": "hf://krea/Krea-2-LoRA-dotmatrix/dotmatrix.safetensors",
+          "scale": 1.0,
+          "trigger": "Monochrome stippling style"
+        }
+      ]
+    },
+    {
+      "_note": "A checkpoint by address: an SDXL-type checkpoint (the illustrious engine). Its images go in a folder named after the file: from-url/Illustrious-XL-v1.0/.",
+      "name": "checkpoint",
+      "model": "hf://OnomaAIResearch/Illustrious-XL-v1.0/Illustrious-XL-v1.0.safetensors",
+      "aspect": "3:4",
+      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
+    },
+    {
+      "_note": "A model as an object, for the engines made of three files (zimage, krea2, qwen, klein): `engine`, the files you replace (`diffusion`, `text_encoder`, `vae`; `checkpoint` for illustrious) as addresses or file names in models/, and `name` for the output folder. Files you leave out are the engine's official ones. A fine-tune usually replaces `diffusion`: \"diffusion\": \"hf://someone/their-finetune/model.safetensors\". This example replaces only the small VAE (with the official one, from its address) so that running it does not download a second 12 GB model.",
+      "name": "object",
+      "model": {
+        "engine": "zimage",
+        "vae": "hf://Comfy-Org/Z-Image-Turbo/split_files/vae/ae.safetensors",
+        "name": "zimage-from-url"
+      },
+      "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter."
+    }
+  ]
+}

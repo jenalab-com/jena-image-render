@@ -1,0 +1,18 @@
+{
+  "_note": "Your own SDXL / Illustrious / NoobAI checkpoint, e.g. one downloaded from Civitai. Put it at models/checkpoints/my-checkpoint.safetensors and use its file name (with or without .safetensors) as the model. Nothing else to configure: on RunPod the file is uploaded for you, or sent once to your storage if JENA_STORAGE is set in .env.",
+  "defaults": {
+    "model": "my-checkpoint",
+    "aspect": "3:4",
+    "negative": "lowres, bad anatomy, bad hands, watermark"
+  },
+  "jobs": [
+    {
+      "name": "forest",
+      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
+    },
+    {
+      "name": "street",
+      "prompt": "masterpiece, best quality, 1girl, solo, rainy neon street, night, clear umbrella, looking back"
+    }
+  ]
+}

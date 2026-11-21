@@ -1,0 +1,38 @@
+{
+  "_note": "FLUX.2 klein 4B: 4 steps, runs on 16 GB cards. A job's own `seeds` replaces the defaults' three seeds.",
+  "output": "klein-example",
+  "defaults": {
+    "model": "klein-4b",
+    "seeds": [
+      10,
+      11,
+      12
+    ]
+  },
+  "jobs": [
+    {
+      "name": "street",
+      "prompt": "A rainy neon-lit street at night, reflections on wet asphalt, people with umbrellas, cinematic wide shot."
+    },
+    {
+      "name": "street-anime",
+      "seeds": [
+        10
+      ],
+      "prompt": "A rainy neon-lit street at night, a girl with a clear umbrella looking back over her shoulder, reflections on wet asphalt.",
+      "loras": [
+        "klein-anime"
+      ]
+    },
+    {
+      "name": "street-sketch",
+      "seeds": [
+        10
+      ],
+      "prompt": "Mature anime illustration with muted color and complex linework, a woman in a long coat waiting at a tram stop in the rain, neon signs behind her.",
+      "loras": [
+        "klein-mikkoani"
+      ]
+    }
+  ]
+}

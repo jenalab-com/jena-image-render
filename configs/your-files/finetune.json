@@ -1,0 +1,17 @@
+{
+  "_note": "Your own fine-tune of zimage / krea2 / qwen / klein. Put the diffusion model in a folder named after its engine: models/diffusion_models/zimage/my-zimage-finetune.safetensors, and use its file name (with or without .safetensors) as the model. The folder says the engine; the text encoder and VAE stay the official ones of that engine. To change those too, or to use a fine-tune that is online, write the model as an object - see configs/basics/08-from-url.json.",
+  "defaults": {
+    "seed": 1,
+    "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter."
+  },
+  "jobs": [
+    {
+      "name": "official",
+      "model": "zimage"
+    },
+    {
+      "name": "mine",
+      "model": "my-zimage-finetune"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+:3000 {
+	basic_auth {
+		{$COMFY_USER} {$COMFY_PASSWORD_HASH}
+	}
+	reverse_proxy 127.0.0.1:8188
+}

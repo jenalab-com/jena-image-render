@@ -1,0 +1,34 @@
+{
+  "_note": "Your checkpoint with your LoRA and a built-in LoRA together, both LoRAs (and your LoRA's trigger word) shared by every job through `defaults`: models/checkpoints/my-checkpoint.safetensors and models/loras/my-lora.safetensors. `\"target\": \"runpod\"` rents a GPU for this file; remove the line to render on your own ComfyUI.",
+  "target": "runpod",
+  "defaults": {
+    "model": "my-checkpoint",
+    "aspect": "3:4",
+    "seeds": [
+      1,
+      2,
+      3
+    ],
+    "loras": [
+      {
+        "name": "my-lora",
+        "scale": 0.8,
+        "trigger": "mylora"
+      },
+      {
+        "name": "illustrious-niji",
+        "scale": 0.5
+      }
+    ]
+  },
+  "jobs": [
+    {
+      "name": "forest",
+      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
+    },
+    {
+      "name": "street",
+      "prompt": "masterpiece, best quality, 1girl, solo, rainy neon street, night, clear umbrella, looking back"
+    }
+  ]
+}

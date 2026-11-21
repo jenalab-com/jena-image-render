@@ -1,0 +1,5 @@
+{
+  "_note": "The smallest job file: a model and a prompt. Change the prompt and run it again. Run: jenair configs/basics/01-one-image.json   (your own ComfyUI; add --runpod to rent a GPU instead)",
+  "model": "zimage",
+  "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter."
+}

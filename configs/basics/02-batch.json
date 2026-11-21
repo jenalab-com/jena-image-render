@@ -1,0 +1,35 @@
+{
+  "_note": "Many prompts in one file. `defaults` apply to every job; a job's own value wins. Each job renders once per seed, so this file makes 2 + 2 + 1 = 5 images in outputs/my-batch/zimage/.",
+  "output": "my-batch",
+  "defaults": {
+    "model": "zimage",
+    "seeds": [
+      1,
+      2
+    ],
+    "aspect": "3:2"
+  },
+  "jobs": [
+    {
+      "name": "cafe",
+      "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter."
+    },
+    {
+      "name": "street",
+      "prompt": "A rainy neon-lit street at night, reflections on wet asphalt, people with umbrellas, cinematic wide shot."
+    },
+    {
+      "_note": "This job replaces the default seeds and size.",
+      "name": "street-tall",
+      "prompt": "A rainy neon-lit street at night, reflections on wet asphalt, people with umbrellas, cinematic wide shot.",
+      "seed": 7,
+      "aspect": "9:16"
+    },
+    {
+      "_note": "skip: true keeps a job in the file without rendering it.",
+      "name": "later",
+      "prompt": "A lighthouse in a storm.",
+      "skip": true
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "_note": "Sizes. `aspect` picks a size near one megapixel (1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9). `width`/`height` give an exact size. Without either, the engine's own default is used.",
+  "output": "sizes",
+  "defaults": {
+    "model": "zimage",
+    "seed": 3,
+    "prompt": "A rainy neon-lit street at night, reflections on wet asphalt, people with umbrellas, cinematic wide shot."
+  },
+  "jobs": [
+    {
+      "name": "engine-default"
+    },
+    {
+      "name": "wide",
+      "aspect": "16:9"
+    },
+    {
+      "name": "phone",
+      "aspect": "9:16"
+    },
+    {
+      "name": "exact",
+      "width": 1536,
+      "height": 640
+    }
+  ]
+}

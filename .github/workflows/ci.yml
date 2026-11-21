@@ -1,0 +1,24 @@
+name: ci
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e .
+      - run: PYTHONPATH=tests python -m unittest discover -s tests -v
+      - run: cd pod && python -m unittest discover -s tests -v
+      - name: Dry-run every example (built-in catalog and addresses, empty models folder)
+        run: |
+          for f in configs/full.json configs/basics/*.json configs/engines/*.json; do
+            jenair "$f" --dry-run || exit 1
+            jenair "$f" --runpod --dry-run || exit 1
+          done

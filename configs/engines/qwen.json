@@ -1,0 +1,36 @@
+{
+  "_note": "Qwen-Image 2.1: strong at text in images and illustration, 25 steps. `poster-lightning` shows the 4-step speed LoRA; `reader-anime` shows a LoRA that wants its own sectioned prompt format.",
+  "output": "qwen-example",
+  "defaults": {
+    "model": "qwen",
+    "aspect": "2:3"
+  },
+  "jobs": [
+    {
+      "name": "poster",
+      "prompt": "A minimalist travel poster for a mountain town. Large clean title text at the top reading \"ALPENGLOW\". Flat shapes, pastel sunset colors, a small red train crossing a bridge."
+    },
+    {
+      "name": "ink",
+      "prompt": "Black ink illustration of a lighthouse on a cliff during a storm, bold brush strokes, white paper background, high contrast."
+    },
+    {
+      "name": "poster-lightning",
+      "prompt": "A minimalist travel poster for a mountain town. Large clean title text at the top reading \"ALPENGLOW\". Flat shapes, pastel sunset colors, a small red train crossing a bridge.",
+      "steps": 4,
+      "loras": [
+        "qwen-lightning"
+      ]
+    },
+    {
+      "name": "reader-anime",
+      "prompt": "fusal style.\n[TASK: TEXT_TO_IMAGE]\n[Subject] One young woman reading a book by a rainy window in a small library.\n[Appearance] Short dark hair, round glasses, a cream knit sweater and a long green skirt.\n[Pose] Sitting sideways on a window seat, knees drawn up, the book resting on them.\n[Composition] Medium shot from the side, the window on the right.\n[Environment] Tall wooden bookshelves, a brass desk lamp, rain running down the glass.\n[Lighting] Soft gray daylight from the window, warm light from the lamp.",
+      "loras": [
+        {
+          "name": "qwen-anime-fusal",
+          "scale": 0.7
+        }
+      ]
+    }
+  ]
+}

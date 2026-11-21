@@ -1,0 +1,35 @@
+{
+  "_note": "Illustrious XL (SDXL type): tag-style prompts, a negative prompt and CFG. The same scene plain and with two built-in style LoRAs. For your own checkpoint see configs/your-files/checkpoint.json.",
+  "output": "illustrious-example",
+  "defaults": {
+    "model": "illustrious",
+    "aspect": "3:4",
+    "negative": "lowres, bad anatomy, bad hands, watermark"
+  },
+  "jobs": [
+    {
+      "name": "forest",
+      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
+    },
+    {
+      "name": "forest-niji",
+      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light, vibrant colors",
+      "loras": [
+        {
+          "name": "illustrious-niji",
+          "scale": 0.8
+        }
+      ]
+    },
+    {
+      "name": "forest-artist",
+      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light",
+      "loras": [
+        {
+          "name": "illustrious-the-artist",
+          "scale": 0.8
+        }
+      ]
+    }
+  ]
+}

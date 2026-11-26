@@ -5,6 +5,9 @@ of prompt × model × seed becomes one image. A model or LoRA is a name, or the
 address of its file (hf://... or https://...); a model may also be an object
 naming its engine and files. Sampling settings fall back to the
 engine defaults, so most jobs need nothing but a model and a prompt.
+
+`batches` groups jobs: each batch has a name (its output sub-folder), its own
+`defaults` laid over the top-level ones, and its jobs.
 """
 
 from __future__ import annotations
@@ -29,7 +32,8 @@ from jena_image_render.models import Registry
 LOGGER = logging.getLogger(__name__)
 SCHEMA_VERSION = 1
 
-TOP_KEYS = {"version", "target", "output", "defaults", "jobs"}
+TOP_KEYS = {"version", "target", "output", "defaults", "jobs", "batches"}
+BATCH_KEYS = {"name", "defaults", "jobs", "skip"}
 TARGETS = ("local", "runpod")
 JOB_KEYS = {
     "name",
@@ -75,6 +79,7 @@ class Render:
     loras: tuple[tuple[str, float], ...]  # (LoRA name or address, scale)
     output: str  # relative to the outputs folder, e.g. "cafe/zimage/cafe_1.png"
     source: str = ""  # job file and job index, for messages
+    batch: str = ""  # the batch's name, "" outside `batches`
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -198,6 +203,87 @@ def _output_part(value: str, label: str) -> str:
     return part.as_posix()
 
 
+# Keys that one layer replaces together: a layer that names any of them hands
+# none of the others through (seeds, and the size).
+GROUPS = (frozenset({"seed", "seeds"}), frozenset({"aspect", "width", "height"}))
+
+
+def layer(base: dict[str, Any], over: dict[str, Any]) -> dict[str, Any]:
+    """`over` laid on `base`: values replace as a whole, as do the GROUPS."""
+    merged = dict(base)
+    for group in GROUPS:
+        if group & over.keys():
+            for key in group:
+                merged.pop(key, None)
+    merged.update(over)
+    return merged
+
+
+def _batch_name(value: Any, label: str) -> str:
+    name = value if isinstance(value, str) else ""
+    if (
+        not name.strip()
+        or name != name.strip()
+        or any(c in name for c in '/\\:*?"<>|')
+        or name.startswith(".")
+    ):
+        raise ConfigError(
+            f"{label}: a batch needs a \"name\" that is a plain folder name "
+            f"(not {value!r})"
+        )
+    return name
+
+
+# (batch name, defaults, jobs, label prefix)
+Group = tuple[str, dict[str, Any], list[Any], str]
+
+
+def _groups(config: dict[str, Any], source: str) -> list[Group]:
+    """The jobs of a file, grouped by batch (one unnamed group without batches)."""
+    if "batches" not in config and "jobs" not in config:  # a bare single job
+        return [("", {}, [{k: v for k, v in config.items() if k not in TOP_KEYS}],
+                 source)]
+    defaults = config.get("defaults") or {}
+    if "batches" not in config:
+        if not isinstance(defaults, dict) or not isinstance(config["jobs"], list):
+            raise ConfigError(f"{source}: defaults must be an object and jobs an array")
+        return [("", defaults, config["jobs"], source)]
+    if not isinstance(defaults, dict):
+        raise ConfigError(f"{source}: defaults must be an object")
+    if "jobs" in config:
+        raise ConfigError(
+            f'{source}: use "batches" or a top-level "jobs", not both '
+            "(put the jobs in a batch)"
+        )
+    batches = config["batches"]
+    if not isinstance(batches, list):
+        raise ConfigError(f"{source}: batches must be an array of batch objects")
+    groups: list[Group] = []
+    seen: set[str] = set()
+    for index, batch in enumerate(batches, 1):
+        label = f"{source} batch {index}"
+        if not isinstance(batch, dict):
+            raise ConfigError(f"{label}: must be an object")
+        name = _batch_name(batch.get("name"), label)
+        if name in seen:
+            raise ConfigError(f"{source}: two batches are named {name!r}")
+        seen.add(name)
+        label = f"{source} batch {name!r}"
+        odd = {k for k in batch if not _comment(k)} - BATCH_KEYS
+        if odd:
+            LOGGER.warning(
+                "%s: ignoring unknown batch keys %s (use %s)",
+                label, sorted(odd), ", ".join(sorted(BATCH_KEYS)),
+            )
+        own = batch.get("defaults") or {}
+        jobs = batch.get("jobs")
+        if not isinstance(own, dict) or not isinstance(jobs, list):
+            raise ConfigError(f"{label}: defaults must be an object and jobs an array")
+        if not batch.get("skip"):
+            groups.append((name, layer(defaults, own), jobs, label))
+    return groups
+
+
 def expand(
     config: Any, registry: Registry, source: str = "config", default_output: str = ""
 ) -> list[Render]:
@@ -209,20 +295,39 @@ def expand(
             f'{source}: "version": {version!r} is not supported '
             f"(this jenair reads version {SCHEMA_VERSION}; the key may be left out)"
         )
-    if "jobs" in config:
+    if "jobs" in config or "batches" in config:
         unknown = {k for k in config if not _comment(k)} - TOP_KEYS
-        defaults = config.get("defaults") or {}
-        jobs = config["jobs"]
-    else:  # a bare single job
-        unknown = set()
-        defaults = {}
-        jobs = [{k: v for k, v in config.items() if k not in TOP_KEYS}]
-    if unknown:
-        LOGGER.warning("%s: ignoring unknown top-level keys %s", source, sorted(unknown))
-    if not isinstance(defaults, dict) or not isinstance(jobs, list):
-        raise ConfigError(f"{source}: defaults must be an object and jobs an array")
-    output = _output_part(str(config.get("output") or default_output or "batch"), f"{source}.output")
+        if unknown:
+            LOGGER.warning(
+                "%s: ignoring unknown top-level keys %s", source, sorted(unknown)
+            )
+    groups = _groups(config, source)
+    output = _output_part(
+        str(config.get("output") or default_output or "batch"), f"{source}.output"
+    )
+    renders: list[Render] = []
+    for batch, defaults, jobs, prefix in groups:
+        folder = f"{output}/{batch}" if batch else output
+        renders.extend(_jobs(jobs, defaults, registry, folder, prefix, batch))
+    seen: dict[str, str] = {}
+    for item in renders:
+        if item.output in seen:
+            raise ConfigError(
+                f"{item.source} and {seen[item.output]} both write {item.output}; "
+                "give the jobs different names"
+            )
+        seen[item.output] = item.source
+    return renders
 
+
+def _jobs(
+    jobs: list[Any],
+    defaults: dict[str, Any],
+    registry: Registry,
+    output: str,
+    source: str,
+    batch: str,
+) -> list[Render]:
     renders: list[Render] = []
     for index, job in enumerate(jobs, 1):
         label = f"{source} job {index}"
@@ -253,16 +358,8 @@ def expand(
             for seed in _seeds(job, defaults, label):
                 renders.append(
                     _render(merged, model.alias, eng, registry, loras, size, seed,
-                            name, output, label)
+                            name, output, label, batch)
                 )
-    seen: dict[str, str] = {}
-    for item in renders:
-        if item.output in seen:
-            raise ConfigError(
-                f"{item.source} and {seen[item.output]} both write {item.output}; "
-                "give the jobs different names"
-            )
-        seen[item.output] = item.source
     return renders
 
 
@@ -299,6 +396,7 @@ def _render(
     name: str,
     output: str,
     label: str,
+    batch: str = "",
 ) -> Render:
     prompt = str(job["prompt"]).strip()
     triggers = []
@@ -344,6 +442,7 @@ def _render(
         loras=tuple((n, s) for n, s, _ in loras),
         output=f"{output}/{alias}/{name}_{seed}.png",
         source=f"{label} ({alias}, seed {seed})",
+        batch=batch,
     )
 
 

@@ -144,11 +144,20 @@ class ExampleTests(unittest.TestCase):
     def test_full_json_is_the_dictionary(self) -> None:
         """configs/full.json shows every key and every form: keep it complete."""
         full = json.loads((ROOT / "configs/full.json").read_text("utf-8"))
-        layers = [full["defaults"], *full["jobs"]]
+        batches = full["batches"]
+        layers = [full["defaults"]]
+        for batch in batches:
+            layers += [batch.get("defaults") or {}, *batch["jobs"]]
         used = {k for layer in layers for k in layer if not k.startswith("_")}
         legacy = {"guidance"}  # still read; `cfg` is the documented key
         self.assertEqual(config.JOB_KEYS - legacy - used, set())
-        self.assertEqual(config.TOP_KEYS - set(full), set())
+        # A file with batches has no top-level jobs (they may not be used together).
+        self.assertEqual(config.TOP_KEYS - {"jobs"} - set(full), set())
+        self.assertNotIn("jobs", full)
+        in_batches = {k for batch in batches for k in batch if not k.startswith("_")}
+        self.assertEqual(config.BATCH_KEYS - in_batches, set())
+        self.assertTrue(any(batch.get("skip") is True for batch in batches))
+        self.assertIn("basics/02", full["_note"])  # one batch: defaults + jobs
         loras = [x for layer in layers for x in (layer.get("loras") or [])]
         self.assertTrue(any(isinstance(x, str) for x in loras))
         entries = [x for x in loras if isinstance(x, dict)]

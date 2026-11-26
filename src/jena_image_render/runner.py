@@ -8,7 +8,7 @@ import time
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 from jena_image_render.comfy import ComfyClient, ComfyError
 from jena_image_render.config import Render
@@ -23,6 +23,12 @@ class Summary:
     done: int = 0
     failed: int = 0
     skipped: int = 0
+    cancelled: bool = False
+
+
+# Render progress for a UI: {"event": "start" | "step" | "done" | "failed",
+# "index", "total", "render", and "step"/"steps", "path"/"seconds" or "error"}.
+Progress = Callable[[dict[str, Any]], None]
 
 
 def select(
@@ -126,22 +132,45 @@ def render_all(
     outputs: Path,
     keep_going: bool = False,
     where: str = "",
+    progress: Progress | None = None,
+    should_stop: Callable[[], bool] | None = None,
 ) -> Summary:
+    """Render one by one. `should_stop` is asked before each image (and when one
+    fails, e.g. after ComfyUI's interrupt): True ends the run, cancelled."""
     summary = Summary()
+    stop = should_stop or (lambda: False)
+
+    def report(event: str, index: int, render: Render, **info: Any) -> None:
+        if progress is not None:
+            progress({"event": event, "index": index, "total": len(todo),
+                      "render": render, **info})
+
     for index, render in enumerate(todo, 1):
+        if stop():
+            summary.cancelled = True
+            break
         label = f"[{index}/{len(todo)}] {render.model} · {render.name} · seed {render.seed}"
         started = time.monotonic()
+        report("start", index, render)
 
-        def on_step(value: int, total: int, label: str = label) -> None:
+        def on_step(
+            value: int, total: int, label: str = label, index: int = index,
+            render: Render = render,
+        ) -> None:
             if value == total or value % max(1, total // 4) == 0:
                 LOGGER.info("%s step %s/%s", label, value, total)
+            report("step", index, render, step=value, steps=total)
 
         try:
             graph = build_graph(render, names(render))
             data = client.run(graph, OUTPUT_NODE, on_step)
         except (ComfyError, LookupError, ValueError) as exc:
+            if stop():
+                summary.cancelled = True
+                break
             summary.failed += 1
             LOGGER.error("%s FAILED: %s", label, exc)
+            report("failed", index, render, error=str(exc))
             if not keep_going:
                 break
             continue
@@ -149,4 +178,10 @@ def render_all(
         path = save(outputs, render, data, {"seconds": seconds, "server": where})
         summary.done += 1
         LOGGER.info("%s done in %.1fs → %s", label, seconds, path)
+        report("done", index, render, path=path, seconds=seconds)
+    if summary.cancelled:
+        LOGGER.warning(
+            "Cancelled: %s of %s image(s) not rendered",
+            len(todo) - summary.done - summary.failed, len(todo),
+        )
     return summary

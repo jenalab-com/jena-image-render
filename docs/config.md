@@ -28,6 +28,27 @@ A batch: `defaults` apply to every job, a job's own value wins.
 **Combinations:** `model` and `seeds` accept lists. Every job renders once per
 model × seed. A job's `seed`/`seeds` replaces the defaults' seeds as a whole.
 
+Several batches, each with its own settings (the [UI](ui.md) shows each batch
+as a tab):
+
+```json
+{
+  "output": "my-project",
+  "defaults": { "seeds": [1, 2] },
+  "batches": [
+    { "name": "anime",
+      "defaults": { "model": "illustrious", "loras": [{ "name": "illustrious-niji", "scale": 0.8 }],
+                    "negative": "lowres, bad hands", "aspect": "3:4" },
+      "jobs": [ { "name": "forest", "prompt": "…" }, { "name": "beach", "prompt": "…" } ] },
+    { "name": "photo",
+      "defaults": { "model": "zimage" },
+      "jobs": [ { "name": "cafe", "prompt": "…" } ] }
+  ]
+}
+```
+
+See [Batches](#batches).
+
 ## Fields
 
 | field | where | | meaning |
@@ -36,7 +57,8 @@ model × seed. A job's `seed`/`seeds` replaces the defaults' seeds as a whole.
 | `target` | top | | `"local"` or `"runpod"`: where to render when the command line does not say |
 | `output` | top | | output sub-folder. Default: the job file's name |
 | `defaults` | top | | values every job inherits |
-| `jobs` | top | | list of jobs. Without it, the top level is one job |
+| `jobs` | top | | list of jobs. Without it (and without `batches`), the top level is one job |
+| `batches` | top | | list of batches, instead of `jobs`; see [Batches](#batches) |
 | `name` | job | | file name prefix. Default `job1`, `job2`, … |
 | `model` | job / defaults | required | a name, an address or a model object — or a list of them; see [Models and LoRAs](#models-and-loras) |
 | `prompt` | job / defaults | required | the prompt |
@@ -48,10 +70,10 @@ model × seed. A job's `seed`/`seeds` replaces the defaults' seeds as a whole.
 | `steps` | job / defaults | | sampling steps. Default per engine |
 | `cfg` | job / defaults | | CFG scale. Default per engine; fixed at 1 for `zimage`, `qwen`, `klein` |
 | `sampler`, `scheduler` | job / defaults | | default per engine; see below |
-| `skip` | job | | `true` skips the job |
+| `skip` | job / batch | | `true` skips the job, or every job of the batch |
 
-Keys starting with `_` (such as `"_note"`) are comments, at the top level and
-in any job. Other unknown keys are ignored with a warning. `hires`, `upscale`, `face_detail`,
+Keys starting with `_` (such as `"_note"`) are comments, at the top level, in
+any batch and in any job. Other unknown keys are ignored with a warning. `hires`, `upscale`, `face_detail`,
 `soft`, `source` and video keys are planned for a later version.
 
 ### Models and LoRAs
@@ -132,6 +154,30 @@ settings in `defaults` that suit one engine, in a job that uses another — give
 { "name": "on-zimage", "model": "zimage", "steps": null, "cfg": null, "sampler": null, "scheduler": null }
 ```
 
+### Batches
+
+`batches` holds groups of jobs, each with its own settings — for example one
+batch per model, each with the LoRAs, negative prompt and sampling that suit
+it. A batch has:
+
+| key | | meaning |
+|---|---|---|
+| `name` | required | the batch's output sub-folder: a plain folder name (no `/`), unique in the file |
+| `defaults` | | values every job of the batch inherits, laid over the top-level `defaults` |
+| `jobs` | required | the batch's jobs (may be empty) |
+| `skip` | | `true` skips the whole batch |
+
+Values are taken in this order, each one replacing the one before it as a
+whole: the top-level `defaults` → the batch's `defaults` → the job. A layer
+that gives `seed` or `seeds` replaces both, and one that gives `aspect` or
+`width`/`height` replaces the size. `null` still means the engine default.
+
+Images go to `outputs/<output>/<batch name>/<model>/<name>_<seed>.png`. A file
+uses either `batches` or a top-level `jobs`, not both, and two batches may not
+share a name. With only one batch, writing `defaults` + `jobs` at the top level
+is the same thing without the batch folder. See
+[`configs/basics/09-batches.json`](../configs/basics/09-batches.json).
+
 ## Sizes
 
 | `aspect` | size | | `aspect` | size |
@@ -153,6 +199,7 @@ error.
 ```
 outputs/<output>/<model>/<name>_<seed>.png
 outputs/<output>/<model>/<name>_<seed>.json   ← prompt, model, LoRAs, seed, all settings, time
+outputs/<output>/<batch>/<model>/<name>_<seed>.png   ← in a file with batches
 ```
 
 Existing PNGs are skipped, so re-running a job file resumes it.
@@ -178,6 +225,7 @@ jenair pull NAME|JOB.json ...   download URL files into ComfyUI's folders
 jenair push JOB.json ...        upload local-only files to JENA_STORAGE
 jenair runpod status | down | up
 jenair engines
+jenair ui [--port 8765] [--no-browser] [--outputs DIR]   the web page (docs/ui.md)
 ```
 
 ### Target
@@ -198,7 +246,10 @@ computer answering: `have`, `download`, `link`, `missing`).
 
 Everything is optional. Settings are read from the environment, or from a
 `.env` file in the project folder (real environment variables win).
-`.env.example` lists the first four; the rest are rarely needed.
+`.env.example` lists the first four; the rest are rarely needed. Instead of
+editing `.env`, you can enter them in `jenair ui` → ⚙ Settings, which writes
+`.env` for you ([ui.md](ui.md#settings)). An empty value (`KEY=`) counts as not
+set.
 
 | setting | | meaning |
 |---|---|---|

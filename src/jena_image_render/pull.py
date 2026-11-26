@@ -58,8 +58,10 @@ def pull_one(
     hashes: Hashes,
     hf_token: str = "",
     opener: Callable[..., Any] | None = None,
+    progress: Callable[[int, int], None] | None = None,
 ) -> bool:
-    """Download one file; False when it was already there."""
+    """Download one file; False when it was already there. `progress` hears
+    (bytes so far, total or 0) after each chunk."""
     if _present(target, spec, hashes):
         LOGGER.info("Already there: %s", target)
         return False
@@ -79,10 +81,14 @@ def pull_one(
             # 206: the server continues the .part; 200: it sends the whole file.
             resumed = bool(offset) and response.status_code == 206
             digest = _hash_file(partial) if resumed else hashlib.sha256()
+            done = offset if resumed else 0
             with partial.open("ab" if resumed else "wb") as stream:
                 for chunk in response.iter_content(CHUNK):
                     stream.write(chunk)
                     digest.update(chunk)
+                    done += len(chunk)
+                    if progress is not None:
+                        progress(done, spec.size)
     sha = digest.hexdigest()
     if spec.sha256 and sha != spec.sha256:
         partial.unlink(missing_ok=True)

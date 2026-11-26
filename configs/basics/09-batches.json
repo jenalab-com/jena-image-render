@@ -1,0 +1,50 @@
+{
+  "_note": "Batches: several groups of jobs in one file, each with its own settings (the UI shows each batch as a tab). The top-level `defaults` apply to every batch; a batch's `defaults` are laid over them; a job's own value wins. Images go to outputs/<output>/<batch name>/<model>/, so this file makes 2 + 2 + 2 = 6 images in outputs/two-looks/photo/zimage/ and outputs/two-looks/anime/illustrious/. Put `skip: true` on a batch to keep it without rendering it.",
+  "output": "two-looks",
+  "defaults": {
+    "seeds": [
+      1,
+      2
+    ]
+  },
+  "batches": [
+    {
+      "name": "photo",
+      "defaults": {
+        "model": "zimage",
+        "aspect": "3:2"
+      },
+      "jobs": [
+        {
+          "name": "cafe",
+          "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter."
+        },
+        {
+          "name": "street",
+          "prompt": "A rainy neon-lit street at night, reflections on wet asphalt, people with umbrellas, cinematic wide shot."
+        }
+      ]
+    },
+    {
+      "_note": "Another engine with its own LoRA, negative prompt and size: nothing from the photo batch is handed down.",
+      "name": "anime",
+      "defaults": {
+        "model": "illustrious",
+        "loras": [
+          {
+            "name": "illustrious-niji",
+            "scale": 0.8
+          }
+        ],
+        "negative": "lowres, bad hands, watermark, text",
+        "aspect": "3:4"
+      },
+      "jobs": [
+        {
+          "name": "forest",
+          "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
+        }
+      ]
+    }
+  ]
+}

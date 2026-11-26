@@ -175,5 +175,81 @@ class ConfigTests(unittest.TestCase):
             prompt([{"name": "zstyle", "strength": 0.5}])
 
 
+class BatchTests(unittest.TestCase):
+    def batches(self, *batches, **top):
+        return run({"version": 1, "output": "o", **top, "batches": list(batches)})
+
+    def test_merge_order_top_then_batch_then_job(self) -> None:
+        renders = self.batches(
+            {"name": "a", "defaults": {"model": "ill", "steps": 20},
+             "jobs": [{"name": "x", "prompt": "p"},
+                      {"name": "y", "prompt": "p", "steps": 12, "seed": 9}]},
+            {"name": "b", "defaults": {"model": "zimage", "steps": None},
+             "jobs": [{"name": "x", "prompt": "p"}]},
+            defaults={"model": "qwen", "steps": 30, "seeds": [1, 2], "aspect": "1:1"},
+        )
+        got = [(r.batch, r.model, r.name, r.seed, r.steps, r.width) for r in renders]
+        self.assertEqual(got, [
+            ("a", "ill", "x", 1, 20, 1024), ("a", "ill", "x", 2, 20, 1024),
+            ("a", "ill", "y", 9, 12, 1024),
+            ("b", "zimage", "x", 1, 9, 1024), ("b", "zimage", "x", 2, 9, 1024),
+        ])
+
+    def test_a_batch_replaces_seeds_and_size_as_a_whole(self) -> None:
+        (r,) = self.batches(
+            {"name": "a", "defaults": {"seed": 5, "width": 640, "height": 512},
+             "jobs": [{"prompt": "p"}]},
+            defaults={"model": "zimage", "seeds": [1, 2], "aspect": "1:1"},
+        )
+        self.assertEqual((r.seed, r.width, r.height), (5, 640, 512))
+
+    def test_output_path_has_the_batch_name(self) -> None:
+        renders = self.batches(
+            {"name": "anime", "defaults": {"model": "ill"},
+             "jobs": [{"name": "forest", "prompt": "p"}]},
+            {"name": "photo", "defaults": {"model": "zimage"},
+             "jobs": [{"name": "forest", "prompt": "p"}]},
+        )
+        self.assertEqual([r.output for r in renders],
+                         ["o/anime/ill/forest_0.png", "o/photo/zimage/forest_0.png"])
+
+    def test_skip_a_batch_or_a_job(self) -> None:
+        renders = self.batches(
+            {"name": "a", "skip": True, "jobs": [{"model": "nope", "prompt": "p"}]},
+            {"name": "b", "_note": "c", "defaults": {"model": "zimage"},
+             "jobs": [{"name": "x", "prompt": "p", "skip": True},
+                      {"name": "y", "prompt": "p"}]},
+        )
+        self.assertEqual([(r.batch, r.name) for r in renders], [("b", "y")])
+
+    def test_errors(self) -> None:
+        job = {"model": "zimage", "prompt": "p"}
+        with self.assertRaisesRegex(ConfigError, "not both"):
+            run({"version": 1, "jobs": [job], "batches": [{"name": "a", "jobs": [job]}]})
+        with self.assertRaisesRegex(ConfigError, "two batches are named 'a'"):
+            self.batches({"name": "a", "jobs": [job]},
+                         {"name": "a", "skip": True, "jobs": [job]})
+        for name in ("", None, "a/b", "..", ".hidden", " a", 3):
+            with self.subTest(name=name), self.assertRaisesRegex(ConfigError, "plain folder"):
+                self.batches({"name": name, "jobs": [job]})
+        with self.assertRaisesRegex(ConfigError, "array"):
+            self.batches({"name": "a"})
+        with self.assertRaisesRegex(ConfigError, "array of batch"):
+            run({"version": 1, "batches": {"name": "a"}})
+        with self.assertRaisesRegex(ConfigError, "batch 'a' job 1: prompt is required"):
+            self.batches({"name": "a", "defaults": {"model": "zimage"}, "jobs": [{}]})
+
+    def test_unknown_batch_keys_warn(self) -> None:
+        with self.assertLogs("jena_image_render.config", "WARNING") as logs:
+            self.batches({"name": "a", "model": "zimage",
+                          "jobs": [{"model": "zimage", "prompt": "p"}]})
+        self.assertIn("unknown batch keys ['model']", logs.output[0])
+
+    def test_without_batches_nothing_changes(self) -> None:
+        (r,) = run({"version": 1, "defaults": {"model": "zimage"},
+                    "jobs": [{"name": "a", "prompt": "x"}]})
+        self.assertEqual((r.output, r.batch), ("out/zimage/a_0.png", ""))
+
+
 if __name__ == "__main__":
     unittest.main()

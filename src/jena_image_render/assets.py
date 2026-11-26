@@ -17,7 +17,7 @@ import json
 import logging
 import time
 from pathlib import Path, PurePosixPath
-from typing import Callable
+from typing import Any, Callable
 
 from jena_image_render import env, models
 from jena_image_render.comfy import ComfyClient, ComfyError
@@ -28,6 +28,9 @@ from jena_image_render.models import FileSpec, Registry
 LOGGER = logging.getLogger(__name__)
 FETCH_TIMEOUT = 60 * 60
 POLL_SECONDS = 10.0
+
+# File progress for a UI: {"dest", "how", "bytes", "total", "status"}.
+FileProgress = Callable[[dict[str, Any]], None]
 
 
 class AssetError(ValueError):
@@ -136,6 +139,7 @@ def deliver(
     client: ComfyClient,
     files: list[FileSpec],
     sleep: Callable[[float], None] = time.sleep,
+    progress: FileProgress | None = None,
 ) -> None:
     """Start pod downloads, upload local files meanwhile, then wait for downloads."""
     downloads = [f for f in files if f.url]
@@ -144,17 +148,36 @@ def deliver(
         client.fetch(downloads)
     for item in sorted(uploads, key=lambda f: f.size):
         LOGGER.info("Uploading %s (%.2f GB)", item.dest, item.size / 1e9)
-        client.upload(item)
+        if progress is None:
+            client.upload(item)
+            continue
+
+        def sent(done: int, total: int, dest: str = item.dest) -> None:
+            progress({"dest": dest, "how": "upload", "bytes": done, "total": total,
+                      "status": "uploading"})
+
+        client.upload(item, progress=sent)
+        progress({"dest": item.dest, "how": "upload", "bytes": item.size,
+                  "total": item.size, "status": "done"})
     if downloads:
-        wait_fetch(client, {f.dest for f in downloads}, sleep)
+        wait_fetch(client, {f.dest for f in downloads}, sleep, progress)
 
 
 def wait_fetch(
-    client: ComfyClient, dests: set[str], sleep: Callable[[float], None] = time.sleep
+    client: ComfyClient,
+    dests: set[str],
+    sleep: Callable[[float], None] = time.sleep,
+    progress: FileProgress | None = None,
 ) -> None:
     deadline = time.monotonic() + FETCH_TIMEOUT
     while time.monotonic() < deadline:
         state = {k: v for k, v in client.fetch_status().items() if k in dests}
+        if progress is not None:
+            for dest, item in state.items():
+                progress({"dest": dest, "how": "fetch",
+                          "bytes": int(item.get("bytes", 0)),
+                          "total": int(item.get("total", 0)),
+                          "status": str(item.get("status", ""))})
         failed = {k: v.get("error") for k, v in state.items() if v["status"] == "error"}
         if failed:
             raise ComfyError(f"download failed: {failed}")

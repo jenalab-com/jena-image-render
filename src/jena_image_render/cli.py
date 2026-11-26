@@ -10,6 +10,7 @@
     jenair push JOB.json                 upload local files to storage
     jenair runpod status | down          see or stop the pod
     jenair engines                       supported engines and sizes
+    jenair ui [--port 8765]              a web page for job files (this computer only)
 
 Jobs render on your own ComfyUI unless --runpod, "target": "runpod" in the job
 file or JENA_TARGET=runpod says otherwise. A GPU is never rented by default.
@@ -337,6 +338,10 @@ def main(argv: list[str] | None = None) -> int:
             return cmd_pull(argv[1:])
         if argv[:1] == ["push"]:
             return cmd_push(argv[1:])
+        if argv[:1] == ["ui"]:
+            from jena_image_render import server
+
+            return server.main(argv[1:])
         return cmd_render(_render_parser().parse_args(argv))
     except KeyboardInterrupt:
         LOGGER.warning("Interrupted")

@@ -476,5 +476,27 @@ class CliLocalTests(Base):
                          "their-ckpt.safetensors").is_file())
 
 
+class FillProgressTests(Base):
+    def setUp(self) -> None:
+        super().setUp()
+        self.names = assets.LocalNames(FakeComfy(self.paths), filled=True)
+        self.hashes = assets.Hashes(self.root / "sha256.json")
+
+    def test_progress_per_file(self) -> None:
+        mine = touch(self.project / "loras/my-style.safetensors")
+        files = [FileSpec("loras/my-style.safetensors", local=str(mine)),
+                 FileSpec("vae/x.safetensors", url="https://x/x", size=len(DATA))]
+        steps, places = local.plan(files, self.names, self.folders)
+        events = []
+        with self.assertLogs("jena_image_render", "INFO"):
+            local.fill(steps, places, self.names, self.hashes, "", FakeOpener(),
+                       progress=events.append)
+        self.assertEqual(events[0], {"dest": "loras/my-style.safetensors", "how": "link",
+                                     "bytes": 0, "total": 0, "status": "done"})
+        downloading = [e for e in events if e["status"] == "downloading"]
+        self.assertEqual(downloading[-1]["bytes"], len(DATA))
+        self.assertEqual(events[-1]["status"], "done")
+
+
 if __name__ == "__main__":
     unittest.main()

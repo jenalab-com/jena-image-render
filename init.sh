@@ -4,6 +4,7 @@
 #   ./init.sh                          set up, then check the first example
 #   ./init.sh configs/full.json        set up (if needed), then run jenair with these arguments
 #   ./init.sh pull zimage
+#   ./init.sh ui                       set up (if needed), then open the web page
 #
 # What it does, only where something is missing:
 #   1. finds Python 3.10+, or installs it (Homebrew on macOS, your package manager on Linux)
@@ -138,6 +139,7 @@ Next:
   source .venv/bin/activate              # then the command is just:  jenair ...
   jenair configs/basics/01-one-image.json           # start ComfyUI first; the first run downloads the model (~20 GB)
   jenair configs/basics/01-one-image.json --runpod  # no GPU? rent one (RUNPOD_API_KEY in .env)
+  jenair ui                                         # or write and render jobs in your browser
 
 Without activating, ./init.sh runs it too:  ./init.sh configs/full.json --dry-run
 Examples: configs/README.md

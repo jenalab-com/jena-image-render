@@ -32,7 +32,7 @@ jenair = "jena_image_render.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-jena_image_render = ["catalog.json"]
+jena_image_render = ["catalog.json", "ui/index.html"]
 
 [tool.ruff]
 line-length = 88

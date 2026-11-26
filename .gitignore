@@ -12,6 +12,7 @@ models/**
 # working state and results
 .jena/
 outputs/
+jobs/
 
 __pycache__/
 *.pyc

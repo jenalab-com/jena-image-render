@@ -94,5 +94,55 @@ class RunnerTests(unittest.TestCase):
         self.assertIn("have     models/", auto)
 
 
+class ProgressTests(unittest.TestCase):
+    def test_progress_events_and_unchanged_results(self) -> None:
+        events = []
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertLogs("jena_image_render.runner", "ERROR"):
+                summary = runner.render_all(
+                    FakeClient({2}), batch(), NAMES, Path(tmp), keep_going=True,
+                    progress=events.append,
+                )
+        self.assertEqual((summary.done, summary.failed, summary.cancelled), (3, 1, False))
+        kinds = [(e["event"], e["index"]) for e in events]
+        self.assertEqual(kinds[:4], [("start", 1), ("step", 1), ("done", 1), ("start", 2)])
+        self.assertIn(("failed", 2), kinds)
+        done = [e for e in events if e["event"] == "done"]
+        self.assertEqual([e["render"].name for e in done], ["a", "b", "b"])
+        self.assertTrue(all(e["total"] == 4 for e in events))
+        step = next(e for e in events if e["event"] == "step")
+        self.assertEqual((step["step"], step["steps"]), (1, 1))
+
+    def test_should_stop_ends_the_run(self) -> None:
+        asked = []
+
+        def stop() -> bool:
+            asked.append(1)
+            return len(asked) > 2  # before images 1 and 2: no; before 3: yes
+
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertLogs("jena_image_render.runner", "WARNING"):
+                summary = runner.render_all(FakeClient(), batch(), NAMES, Path(tmp),
+                                            should_stop=stop)
+        self.assertEqual((summary.done, summary.failed, summary.cancelled), (2, 0, True))
+
+    def test_a_failure_after_stop_is_a_cancel(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            stopped = []
+            client = FakeClient({1})
+            real = client.run
+
+            def run(*args, **kwargs):
+                stopped.append(True)  # cancel arrives while the image runs
+                return real(*args, **kwargs)
+
+            client.run = run
+            with self.assertLogs("jena_image_render.runner", "WARNING") as logs:
+                summary = runner.render_all(client, batch(), NAMES, Path(tmp),
+                                            should_stop=lambda: bool(stopped))
+        self.assertEqual((summary.done, summary.failed, summary.cancelled), (0, 0, True))
+        self.assertNotIn("FAILED", "\n".join(logs.output))
+
+
 if __name__ == "__main__":
     unittest.main()

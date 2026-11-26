@@ -62,6 +62,8 @@ def watch_progress(
             on_step(int(data["value"]), int(data["max"]))
         elif kind == "execution_error":
             raise ComfyError(f"execution error: {data.get('exception_message')}")
+        elif kind == "execution_interrupted":
+            raise ComfyError("interrupted")
         elif kind == "executing" and data.get("node") is None:
             return "done"
         elif kind == "execution_success":
@@ -127,6 +129,15 @@ class ComfyClient:
 
     def ready(self, timeout: float = 15) -> bool:
         return self.probe(timeout) == "200"
+
+    def system_stats(self, timeout: float = 15) -> dict[str, Any] | None:
+        """ComfyUI's version and devices (GET /system_stats), or None."""
+        try:
+            response = self.session.get(f"{self.base}/system_stats", timeout=timeout)
+            data = response.json() if response.status_code == 200 else None
+        except (requests.RequestException, ValueError):
+            return None
+        return data if isinstance(data, dict) else None
 
     def folder_paths(self, timeout: float = 15) -> dict[str, list[str]] | None:
         """ComfyUI's model folders per role (GET /internal/folder_paths).

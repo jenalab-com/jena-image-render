@@ -1,233 +1,244 @@
 {
-  "_note": "The dictionary: every key and every form this tool understands, in one file. Look things up here, copy the job that does what you want. `defaults` is what every job starts from; a job repeats a key only to change it, and its value REPLACES the default as a whole (a job's `loras` list replaces the default list, it is not added to it). Only `model` and `prompt` are required (`version` may be left out; it says which format the file is in, and 1 is the only one): leave any other key out and the engine's own tested value is used (`jenair engines` lists them). Keys starting with `_` are comments. Jobs are grouped: basics, size, seeds, sampling, negative, LoRAs, models, your own files. The basics/ files show each idea alone.",
+  "_note": "The dictionary: every key and every form this tool understands, in one file. Look things up here, copy the job that does what you want. The file is split into `batches` (one per engine here; the UI shows each batch as a tab): the top-level `defaults` apply to every batch, a batch's `defaults` are laid over them, and a job repeats a key only to change it. A value REPLACES the one below it as a whole (a job's `loras` list replaces the batch's list, it is not added to it). Only `model` and `prompt` are required (`version` may be left out; it says which format the file is in, and 1 is the only one): leave any other key out and the engine's own tested value is used (`jenair engines` lists them). Images go to outputs/<output>/<batch name>/<model>/. With only one batch you may write `defaults` + `jobs` at the top level instead (basics/02-batch.json). Keys starting with `_` are comments. The basics/ files show each idea alone.",
   "version": 1,
   "target": "local",
   "output": "full-example",
   "defaults": {
-    "_note": "Shared by all jobs below, written once. From `steps` down are the sampling settings; these are the values for illustrious (SDXL). Delete any of them to get the engine default. `sampler` and `scheduler` are ComfyUI's names.",
-    "model": "illustrious",
-    "loras": [
-      {
-        "name": "illustrious-niji",
-        "scale": 0.8
-      }
-    ],
-    "negative": "lowres, bad anatomy, bad hands, watermark, text",
-    "aspect": "3:4",
+    "_note": "Shared by every batch below, written once. A batch or a job that gives `seed` or `seeds` replaces them.",
     "seeds": [
       1,
       2
-    ],
-    "steps": 28,
-    "cfg": 6.0,
-    "sampler": "euler_ancestral",
-    "scheduler": "normal"
+    ]
   },
-  "jobs": [
+  "batches": [
     {
-      "_note": "Nothing but a name and a prompt: everything else comes from defaults. 2 seeds = 2 images.",
-      "name": "forest",
-      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
-    },
-    {
-      "_note": "Override the size with another aspect...",
-      "name": "beach-wide",
-      "aspect": "16:9",
-      "prompt": "masterpiece, best quality, 1girl, solo, standing on a beach at sunset, white dress, wind in her hair, soft light"
-    },
-    {
-      "_note": "...or with an exact width and height.",
-      "name": "beach-banner",
-      "width": 1536,
-      "height": 640,
-      "prompt": "masterpiece, best quality, 1girl, solo, standing on a beach at sunset, white dress, wind in her hair, soft light"
-    },
-    {
-      "_note": "Override the seeds: this job renders once, with seed 42...",
-      "name": "library",
-      "seed": 42,
-      "prompt": "masterpiece, best quality, 1girl, solo, reading in an old library, round glasses, stacks of books, soft light"
-    },
-    {
-      "_note": "...or a list of seeds: one image per seed.",
-      "name": "library-three",
-      "seeds": [
-        10,
-        11,
-        12
-      ],
-      "prompt": "masterpiece, best quality, 1girl, solo, reading in an old library, round glasses, stacks of books, soft light"
-    },
-    {
-      "_note": "Override the sampling: fewer steps, lower CFG, another sampler and scheduler.",
-      "name": "forest-tuned",
-      "steps": 20,
-      "cfg": 4.5,
-      "sampler": "dpmpp_2m",
-      "scheduler": "karras",
-      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
-    },
-    {
-      "_note": "A sampler name copied from a model card (Euler a, DPM++ 2M Karras, DPM++ SDE Karras, UniPC, ...) already includes its scheduler, so the default `scheduler` is handed back with null.",
-      "name": "forest-card-sampler",
-      "sampler": "DPM++ 2M Karras",
-      "scheduler": null,
-      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
-    },
-    {
-      "_note": "Override the negative prompt for one job.",
-      "name": "forest-negative",
-      "negative": "lowres, bad hands, watermark, text, dark, night",
-      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
-    },
-    {
-      "_note": "Override the LoRAs: the list replaces the default one, so repeat a LoRA you want to keep. Here niji is weaker and a second LoRA is added. A LoRA entry is a name, or {name, scale, trigger}: `trigger` words are put in front of the prompt (built-in LoRAs already know theirs).",
-      "name": "forest-two-loras",
-      "loras": [
+      "_note": "illustrious (SDXL): the jobs below show the size, seeds, sampling, negative, LoRA and your-files forms on one engine.",
+      "name": "illustrious",
+      "defaults": {
+        "_note": "This batch's own defaults, laid over the top-level ones. From `steps` down are the sampling settings; these are the values for illustrious (SDXL). Delete any of them to get the engine default. `sampler` and `scheduler` are ComfyUI's names.",
+        "model": "illustrious",
+        "loras": [
+          {
+            "name": "illustrious-niji",
+            "scale": 0.8
+          }
+        ],
+        "negative": "lowres, bad anatomy, bad hands, watermark, text",
+        "aspect": "3:4",
+        "steps": 28,
+        "cfg": 6.0,
+        "sampler": "euler_ancestral",
+        "scheduler": "normal"
+      },
+      "jobs": [
         {
-          "name": "illustrious-niji",
-          "scale": 0.5
+          "_note": "Nothing but a name and a prompt: everything else comes from the defaults. 2 seeds = 2 images.",
+          "name": "forest",
+          "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
         },
         {
-          "name": "illustrious-the-artist",
-          "scale": 0.7,
-          "trigger": "the artist"
-        }
-      ],
-      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
-    },
-    {
-      "_note": "`trigger`: \"\" uses a built-in LoRA without adding its trigger word.",
-      "name": "forest-no-trigger",
-      "loras": [
+          "_note": "Override the size with another aspect...",
+          "name": "beach-wide",
+          "aspect": "16:9",
+          "prompt": "masterpiece, best quality, 1girl, solo, standing on a beach at sunset, white dress, wind in her hair, soft light"
+        },
         {
-          "name": "illustrious-niji",
-          "scale": 0.8,
-          "trigger": ""
-        }
-      ],
-      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
-    },
-    {
-      "_note": "No LoRA for this job: an empty list.",
-      "name": "forest-no-lora",
-      "loras": [],
-      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
-    },
-    {
-      "_note": "A LoRA by address (hf://owner/repo[@revision]/path or https://...): nothing to download first. It knows no trigger, so give one. This LoRA is for krea2, so the model changes too, and the illustrious sampling and negative are handed back to krea2 with null and \"\".",
-      "name": "greenhouse-lora-by-address",
-      "model": "krea2",
-      "loras": [
+          "_note": "...or with an exact width and height.",
+          "name": "beach-banner",
+          "width": 1536,
+          "height": 640,
+          "prompt": "masterpiece, best quality, 1girl, solo, standing on a beach at sunset, white dress, wind in her hair, soft light"
+        },
         {
-          "name": "hf://krea/Krea-2-LoRA-dotmatrix/dotmatrix.safetensors",
-          "scale": 1.0,
-          "trigger": "Monochrome stippling style"
-        }
-      ],
-      "negative": "",
-      "steps": null,
-      "cfg": null,
-      "sampler": null,
-      "scheduler": null,
-      "aspect": "1:1",
-      "prompt": "Inside an old glass greenhouse full of ferns and orchids, a watering can on a wooden bench."
-    },
-    {
-      "_note": "Another model in the same file. The defaults above are tuned for illustrious, so hand the sampling back to this engine with null (= the engine's own default). A LoRA belongs to one engine, so the list is replaced too. zimage has no negative prompt and a fixed CFG of 1, and its prompt is a sentence, not tags.",
-      "name": "forest-zimage",
-      "model": "zimage",
-      "loras": [
-        "zimage-technicolor"
-      ],
-      "negative": "",
-      "steps": null,
-      "cfg": null,
-      "sampler": null,
-      "scheduler": null,
-      "aspect": "2:3",
-      "prompt": "A young woman in a long coat walking through a sunlit forest, looking up as leaves fall around her."
-    },
-    {
-      "_note": "Several models for one job: one image per model and seed. With engines that differ, give no LoRAs and leave the sampling to each engine.",
-      "name": "cafe-compare",
-      "model": [
-        "zimage",
-        "klein-4b"
-      ],
-      "loras": [],
-      "negative": "",
-      "steps": null,
-      "cfg": null,
-      "sampler": null,
-      "scheduler": null,
-      "aspect": "1:1",
-      "seed": 7,
-      "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter."
-    },
-    {
-      "_note": "A checkpoint by address: an SDXL-type file (illustrious engine), so the defaults above fit as they are. Its images go in a folder named after the file.",
-      "name": "forest-checkpoint-by-address",
-      "model": "hf://OnomaAIResearch/Illustrious-XL-v1.0/Illustrious-XL-v1.0.safetensors",
-      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
-    },
-    {
-      "_note": "A model as an object, for the engines made of three files (zimage, krea2, qwen, klein): `engine`, the files you replace (`diffusion`, `text_encoder`, `vae`; `checkpoint` for illustrious) as addresses or file names in models/, and `name` for the output folder. Files you leave out are the engine's official ones. A fine-tune usually replaces `diffusion`: \"diffusion\": \"hf://someone/their-finetune/model.safetensors\". This example replaces only the small VAE (with the official one, from its address) so that running it does not download a second 12 GB model.",
-      "name": "cafe-model-object",
-      "model": {
-        "engine": "zimage",
-        "vae": "hf://Comfy-Org/Z-Image-Turbo/split_files/vae/ae.safetensors",
-        "name": "zimage-by-object"
-      },
-      "loras": [],
-      "negative": "",
-      "steps": null,
-      "cfg": null,
-      "sampler": null,
-      "scheduler": null,
-      "aspect": "1:1",
-      "seed": 7,
-      "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter."
-    },
-    {
-      "_note": "YOUR FILES. The next three jobs need a file of yours, so they carry skip: true - put the file in place and delete the `skip` line. This one: models/checkpoints/my-checkpoint.safetensors, used by its file name (with or without .safetensors).",
-      "name": "my-checkpoint",
-      "skip": true,
-      "model": "my-checkpoint",
-      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
-    },
-    {
-      "_note": "models/loras/my-lora.safetensors (or models/loras/illustrious/my-lora.safetensors to have the engine checked), with its trigger word.",
-      "name": "my-lora",
-      "skip": true,
-      "loras": [
+          "_note": "Override the seeds: this job renders once, with seed 42...",
+          "name": "library",
+          "seed": 42,
+          "prompt": "masterpiece, best quality, 1girl, solo, reading in an old library, round glasses, stacks of books, soft light"
+        },
         {
+          "_note": "...or a list of seeds: one image per seed.",
+          "name": "library-three",
+          "seeds": [
+            10,
+            11,
+            12
+          ],
+          "prompt": "masterpiece, best quality, 1girl, solo, reading in an old library, round glasses, stacks of books, soft light"
+        },
+        {
+          "_note": "Override the sampling: fewer steps, lower CFG, another sampler and scheduler.",
+          "name": "forest-tuned",
+          "steps": 20,
+          "cfg": 4.5,
+          "sampler": "dpmpp_2m",
+          "scheduler": "karras",
+          "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
+        },
+        {
+          "_note": "A sampler name copied from a model card (Euler a, DPM++ 2M Karras, DPM++ SDE Karras, UniPC, ...) already includes its scheduler, so the batch's `scheduler` is handed back with null (null = the engine's own default).",
+          "name": "forest-card-sampler",
+          "sampler": "DPM++ 2M Karras",
+          "scheduler": null,
+          "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
+        },
+        {
+          "_note": "Override the negative prompt for one job.",
+          "name": "forest-negative",
+          "negative": "lowres, bad hands, watermark, text, dark, night",
+          "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
+        },
+        {
+          "_note": "Override the LoRAs: the list replaces the default one, so repeat a LoRA you want to keep. Here niji is weaker and a second LoRA is added. A LoRA entry is a name, or {name, scale, trigger}: `trigger` words are put in front of the prompt (built-in LoRAs already know theirs).",
+          "name": "forest-two-loras",
+          "loras": [
+            {
+              "name": "illustrious-niji",
+              "scale": 0.5
+            },
+            {
+              "name": "illustrious-the-artist",
+              "scale": 0.7,
+              "trigger": "the artist"
+            }
+          ],
+          "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
+        },
+        {
+          "_note": "`trigger`: \"\" uses a built-in LoRA without adding its trigger word.",
+          "name": "forest-no-trigger",
+          "loras": [
+            {
+              "name": "illustrious-niji",
+              "scale": 0.8,
+              "trigger": ""
+            }
+          ],
+          "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
+        },
+        {
+          "_note": "No LoRA for this job: an empty list.",
+          "name": "forest-no-lora",
+          "loras": [],
+          "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
+        },
+        {
+          "_note": "A checkpoint by address: an SDXL-type file (illustrious engine), so the defaults of this batch fit as they are. Its images go in a folder named after the file.",
+          "name": "forest-checkpoint-by-address",
+          "model": "hf://OnomaAIResearch/Illustrious-XL-v1.0/Illustrious-XL-v1.0.safetensors",
+          "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
+        },
+        {
+          "_note": "YOUR FILES. The next two jobs (and my-finetune in the zimage batch) need a file of yours, so they carry skip: true - put the file in place and delete the `skip` line. This one: models/checkpoints/my-checkpoint.safetensors, used by its file name (with or without .safetensors).",
+          "name": "my-checkpoint",
+          "skip": true,
+          "model": "my-checkpoint",
+          "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
+        },
+        {
+          "_note": "models/loras/my-lora.safetensors (or models/loras/illustrious/my-lora.safetensors to have the engine checked), with its trigger word.",
           "name": "my-lora",
-          "scale": 0.8,
-          "trigger": "mylora"
+          "skip": true,
+          "loras": [
+            {
+              "name": "my-lora",
+              "scale": 0.8,
+              "trigger": "mylora"
+            }
+          ],
+          "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
         }
-      ],
-      "prompt": "masterpiece, best quality, 1girl, solo, walking through a sunlit forest, long coat, looking up, leaves falling, soft light"
+      ]
     },
     {
-      "_note": "A fine-tune of a three-file engine: models/diffusion_models/zimage/my-zimage-finetune.safetensors. The folder name says which engine it is; text encoder and VAE are the official ones.",
-      "name": "my-finetune",
-      "skip": true,
-      "model": "my-zimage-finetune",
-      "loras": [],
-      "negative": "",
-      "steps": null,
-      "cfg": null,
-      "sampler": null,
-      "scheduler": null,
-      "aspect": "2:3",
-      "prompt": "A young woman in a long coat walking through a sunlit forest, looking up as leaves fall around her."
+      "_note": "krea2. A batch only needs the defaults its engine wants: nothing from the illustrious batch is handed down.",
+      "name": "krea2",
+      "defaults": {
+        "model": "krea2",
+        "aspect": "1:1"
+      },
+      "jobs": [
+        {
+          "_note": "A LoRA by address (hf://owner/repo[@revision]/path or https://...): nothing to download first. It knows no trigger, so give one.",
+          "name": "greenhouse-lora-by-address",
+          "loras": [
+            {
+              "name": "hf://krea/Krea-2-LoRA-dotmatrix/dotmatrix.safetensors",
+              "scale": 1.0,
+              "trigger": "Monochrome stippling style"
+            }
+          ],
+          "prompt": "Inside an old glass greenhouse full of ferns and orchids, a watering can on a wooden bench."
+        }
+      ]
     },
     {
-      "_note": "skip: true keeps any job in the file without rendering it.",
-      "name": "not-yet",
+      "_note": "zimage: no negative prompt and a fixed CFG of 1, and its prompts are sentences, not tags.",
+      "name": "zimage",
+      "defaults": {
+        "model": "zimage",
+        "aspect": "2:3"
+      },
+      "jobs": [
+        {
+          "_note": "A built-in LoRA in the short form: a name, full strength.",
+          "name": "forest-zimage",
+          "loras": [
+            "zimage-technicolor"
+          ],
+          "prompt": "A young woman in a long coat walking through a sunlit forest, looking up as leaves fall around her."
+        },
+        {
+          "_note": "A model as an object, for the engines made of three files (zimage, krea2, qwen, klein): `engine`, the files you replace (`diffusion`, `text_encoder`, `vae`; `checkpoint` for illustrious) as addresses or file names in models/, and `name` for the output folder. Files you leave out are the engine's official ones. A fine-tune usually replaces `diffusion`: \"diffusion\": \"hf://someone/their-finetune/model.safetensors\". This example replaces only the small VAE (with the official one, from its address) so that running it does not download a second 12 GB model.",
+          "name": "cafe-model-object",
+          "model": {
+            "engine": "zimage",
+            "vae": "hf://Comfy-Org/Z-Image-Turbo/split_files/vae/ae.safetensors",
+            "name": "zimage-by-object"
+          },
+          "aspect": "1:1",
+          "seed": 7,
+          "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter."
+        },
+        {
+          "_note": "A fine-tune of a three-file engine: models/diffusion_models/zimage/my-zimage-finetune.safetensors. The folder name says which engine it is; text encoder and VAE are the official ones.",
+          "name": "my-finetune",
+          "skip": true,
+          "model": "my-zimage-finetune",
+          "prompt": "A young woman in a long coat walking through a sunlit forest, looking up as leaves fall around her."
+        }
+      ]
+    },
+    {
+      "_note": "Several models in one batch: one image per prompt, model and seed. With engines that differ, give no LoRAs and leave the sampling to each engine.",
+      "name": "compare",
+      "defaults": {
+        "model": [
+          "zimage",
+          "klein-4b"
+        ],
+        "aspect": "1:1",
+        "seed": 7
+      },
+      "jobs": [
+        {
+          "name": "cafe-compare",
+          "prompt": "A quiet neighborhood cafe at dawn, warm light through tall windows, steam rising from a cup on a wooden counter."
+        }
+      ]
+    },
+    {
+      "_note": "skip: true on a batch keeps it in the file without rendering any of its jobs (on a job it skips that job).",
+      "name": "later",
       "skip": true,
-      "prompt": "A lighthouse in a storm."
+      "defaults": {
+        "model": "zimage"
+      },
+      "jobs": [
+        {
+          "name": "not-yet",
+          "prompt": "A lighthouse in a storm."
+        }
+      ]
     }
   ]
 }

@@ -32,6 +32,10 @@ DIAG_SECONDS = 30.0
 READY_TIMEOUT = 20 * 60
 START_ATTEMPTS = 3
 CRASH_RESTARTS = 2
+TYPICAL_START_SECONDS = 5 * 60  # a healthy host: container in 3–4.5 min, then ComfyUI
+
+# Start progress for a UI: {"phase": ..., "cloud": ..., "attempt": ..., ...}.
+Progress = Callable[[dict[str, Any]], None]
 
 
 @dataclass
@@ -94,6 +98,10 @@ class StuckPull(Exception):
     """The host never started the container; another host may do better."""
 
 
+class Cancelled(Exception):
+    """The caller asked to stop while a pod was starting (the pod is terminated)."""
+
+
 class Sessions:
     """The pod this tool started, remembered in .jena/session.json."""
 
@@ -153,7 +161,17 @@ class Pods:
         return None
 
     # ── start ────────────────────────────────────────────────────────
-    def start(self, max_hours: float, secure: bool = False) -> dict[str, Any]:
+    def start(
+        self,
+        max_hours: float,
+        secure: bool = False,
+        progress: Progress | None = None,
+        should_stop: Callable[[], bool] | None = None,
+    ) -> dict[str, Any]:
+        """Rent and wait for a pod. `progress` hears each phase; `should_stop`
+        returning True terminates the pod being started (Cancelled)."""
+        report = progress or (lambda event: None)
+        stop = should_stop or (lambda: False)
         password = secrets.token_urlsafe(24)
         pod_env = {
             "COMFY_USER": USER,
@@ -165,19 +183,25 @@ class Pods:
             pod_env["HF_TOKEN"] = token
         if token := env.get("CIVITAI_TOKEN"):
             pod_env["CIVITAI_API_TOKEN"] = token
+        if stop():
+            raise Cancelled("pod start cancelled")
         if not secure:
             try:
+                report({"phase": "renting", "cloud": "community", "attempt": 1})
                 return self._attempt(
                     pod_env, password, max_hours, False,
-                    self.settings.community_pull_minutes * 60,
+                    self.settings.community_pull_minutes * 60, report, stop,
                 )
             except (StuckPull, StartFailed) as exc:
                 LOGGER.warning("Community start failed (%s); trying Secure Cloud", exc)
         for attempt in range(1, START_ATTEMPTS + 1):
+            if stop():
+                raise Cancelled("pod start cancelled")
             try:
+                report({"phase": "renting", "cloud": "secure", "attempt": attempt})
                 return self._attempt(
                     pod_env, password, max_hours, True,
-                    self.settings.secure_pull_minutes * 60,
+                    self.settings.secure_pull_minutes * 60, report, stop,
                 )
             except StuckPull as exc:
                 LOGGER.warning(
@@ -193,11 +217,15 @@ class Pods:
         max_hours: float,
         secure: bool,
         pull_timeout: float,
+        report: Progress | None = None,
+        stop: Callable[[], bool] | None = None,
     ) -> dict[str, Any]:
         """Create one pod and wait for it; any failure terminates that pod."""
         pod = self._create(pod_env, secure)
         try:
-            return self._await_ready(pod, password, max_hours, pull_timeout)
+            return self._await_ready(
+                pod, password, max_hours, pull_timeout, report, stop
+            )
         except BaseException:  # timeout, Ctrl+C or any error: never leave it billing
             LOGGER.warning("Start did not finish; terminating pod %s", pod["id"])
             self.api.terminate(pod["id"])
@@ -229,7 +257,13 @@ class Pods:
             raise StartFailed(f"Pod creation request failed: {exc}") from exc
 
     def _await_ready(
-        self, pod: dict[str, str], password: str, max_hours: float, pull_timeout: float
+        self,
+        pod: dict[str, str],
+        password: str,
+        max_hours: float,
+        pull_timeout: float,
+        report: Progress | None = None,
+        stop: Callable[[], bool] | None = None,
     ) -> dict[str, Any]:
         session = {
             "pod_id": pod["id"],
@@ -238,6 +272,7 @@ class Pods:
             "user": USER,
             "password": password,
             "created": datetime.now(timezone.utc).isoformat(),
+            "max_hours": max_hours,
         }
         self.sessions.save(session)
         LOGGER.info(
@@ -250,11 +285,20 @@ class Pods:
         container_started = False
         last_uptime: int | None = None
         restarts = 0
+        info = {"pod_id": pod["id"], "gpu": pod["gpu"], "created": session["created"],
+                "typical_seconds": TYPICAL_START_SECONDS}
         while True:
+            if stop is not None and stop():
+                raise Cancelled("pod start cancelled")
             if client.ready():
                 LOGGER.info("Ready after %s: %s", _clock(self.clock() - started), session["url"])
+                if report is not None:
+                    report({**info, "phase": "ready", "elapsed": self.clock() - started})
                 return session
             elapsed = self.clock() - started
+            if report is not None:
+                phase = "starting ComfyUI" if container_started else "pulling image"
+                report({**info, "phase": phase, "elapsed": elapsed})
             if self.clock() >= next_diag:
                 uptime = self._log_startup(client, pod["id"], elapsed)
                 if uptime is not None:

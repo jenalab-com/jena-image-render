@@ -127,6 +127,27 @@ receives your own files by upload (or from your storage), then renders. The pod
 after `--max-hours`, default 3). Ctrl+C terminates it immediately. Details and
 costs: [docs/runpod.md](docs/runpod.md).
 
+## UI
+
+Prefer forms to JSON? `jenair ui` opens a page in your browser for writing and
+rendering job files:
+
+```bash
+jenair ui            # http://127.0.0.1:8765/, on this computer only
+```
+
+Each tab is a set of settings with its prompts (a model with its LoRAs, size,
+seeds and sampling, and as many prompts as you like); the fields show each
+engine's defaults, so you fill in only what you change. The Render side picks
+Local or RunPod, connects (for RunPod with a start-up progress bar, then the
+time left until the pod stops itself), checks what would happen, and renders
+every tab in one go, with progress and thumbnails. Files are saved as ordinary
+job files in `jobs/` — `jenair jobs/<name>.json` renders them too — and any job
+file opens in it. *Browse…* picks a model or LoRA file anywhere on this computer
+and links it into `models/`, and ⚙ Settings takes your RunPod key and tokens
+(it writes `.env`, so you need not edit it). Details and safety:
+[docs/ui.md](docs/ui.md).
+
 ## Job files
 
 ```json
@@ -148,13 +169,15 @@ costs: [docs/runpod.md](docs/runpod.md).
 ```
 
 Images land in `outputs/<output>/<model>/<name>_<seed>.png`, each with a
-`.json` next to it. All fields: [docs/config.md](docs/config.md).
+`.json` next to it. Several groups of jobs with their own settings go in
+`"batches"` (one sub-folder each; the UI shows them as tabs). All fields:
+[docs/config.md](docs/config.md).
 
 **Start from the examples.** [`configs/full.json`](configs/full.json) shows
 everything in one file — shared `defaults`, jobs that override them, LoRAs,
 several models. [`configs/`](configs) also has one small file per idea
-(batches, model comparison, LoRAs, sizes, sampling, `target`, files by
-address), one per engine,
+(a batch, model comparison, LoRAs, sizes, sampling, `target`, files by
+address, `batches`), one per engine,
 and examples for your own checkpoints and LoRAs — each with a `_note` saying
 what it shows and what to change. Index: [configs/README.md](configs/README.md).
 

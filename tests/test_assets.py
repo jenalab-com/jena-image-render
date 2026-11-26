@@ -142,5 +142,34 @@ class AssetTests(unittest.TestCase):
             assets.deliver(client, [FileSpec("vae/v", url="https://x/v")], sleep=lambda s: None)
 
 
+class UploadingClient(FakeClient):
+    def upload(self, item, progress=None):
+        self.uploaded.append(item.dest)
+        if progress is not None:
+            progress(item.size // 2, item.size)
+            progress(item.size, item.size)
+
+
+class DeliverProgressTests(unittest.TestCase):
+    def test_progress_for_uploads_and_downloads(self) -> None:
+        states = [
+            {"vae/v": {"status": "downloading", "bytes": 1, "total": 2}},
+            {"vae/v": {"status": "done", "bytes": 2, "total": 2}},
+        ]
+        client = UploadingClient(fetch_states=states)
+        files = [FileSpec("vae/v", url="https://x/v"),
+                 FileSpec("loras/zimage/a", local="/a", sha256="d" * 64, size=10)]
+        events = []
+        assets.deliver(client, files, sleep=lambda s: None, progress=events.append)
+        got = [(e["dest"], e["how"], e["bytes"], e["status"]) for e in events]
+        self.assertEqual(got, [
+            ("loras/zimage/a", "upload", 5, "uploading"),
+            ("loras/zimage/a", "upload", 10, "uploading"),
+            ("loras/zimage/a", "upload", 10, "done"),
+            ("vae/v", "fetch", 1, "downloading"),
+            ("vae/v", "fetch", 2, "done"),
+        ])
+
+
 if __name__ == "__main__":
     unittest.main()

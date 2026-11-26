@@ -1,0 +1,2227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="jenair-token" content="__JENAIR_TOKEN__">
+<title>jenair</title>
+<link rel="icon" href="data:,">
+<style>
+:root {
+  --bg: #f5f6f8; --panel: #ffffff; --field: #ffffff; --chip: #eef0f4;
+  --line: #d8dce2; --text: #1c2230; --muted: #687080;
+  --accent: #2c6bd9; --accent-text: #ffffff; --accent-soft: #e3ecfb;
+  --ok: #1d8f4e; --warn: #b86e00; --bad: #cc3636; --idle: #9aa1ad;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #13161b; --panel: #1a1e25; --field: #11141a; --chip: #252a33;
+    --line: #2e343e; --text: #e3e6eb; --muted: #949cab;
+    --accent: #5b8eef; --accent-text: #0d1117; --accent-soft: #1f2b42;
+    --ok: #3cc47a; --warn: #e3a03c; --bad: #ef6464; --idle: #6b7280;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 13px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  display: grid; grid-template-columns: minmax(0, 1fr) 340px; height: 100vh;
+  overflow: hidden;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button {
+  background: var(--chip); border: 1px solid var(--line); border-radius: 5px;
+  padding: 3px 9px; cursor: pointer; white-space: nowrap;
+}
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: .45; cursor: default; }
+button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+button.icon { padding: 1px 6px; background: transparent; border-color: transparent; color: var(--muted); }
+button.icon:hover:not(:disabled) { color: var(--text); border-color: var(--line); }
+button.on { background: var(--accent-soft); border-color: var(--accent); }
+input, select, textarea {
+  background: var(--field); border: 1px solid var(--line); border-radius: 4px;
+  padding: 3px 6px; min-width: 0;
+}
+input:focus, select:focus, textarea:focus, button:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: -1px;
+}
+input:disabled, textarea:disabled, select:disabled { opacity: .5; }
+input[type=checkbox], input[type=radio] { margin: 0 4px 0 0; vertical-align: -2px; }
+textarea { resize: vertical; width: 100%; }
+.bad, input.bad, select.bad, textarea.bad { border-color: var(--bad) !important; color: var(--bad); }
+.muted { color: var(--muted); }
+.hint { color: var(--muted); font-size: 12px; margin: 4px 0; }
+code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* main column */
+#main { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
+#top {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 8px 14px; background: var(--panel); border-bottom: 1px solid var(--line);
+}
+#top .brand { font-weight: 700; margin-right: 8px; letter-spacing: .2px; }
+#top .file { margin-left: 10px; color: var(--muted); max-width: 300px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
+#top .file b { color: var(--warn); }
+#top .spacer { flex: 1; }
+#top label { display: flex; align-items: center; gap: 4px; color: var(--muted); }
+#output { width: 150px; }
+.menu { position: relative; }
+.menu .list {
+  position: absolute; top: 100%; left: 0; z-index: 20; margin-top: 3px; min-width: 280px;
+  max-height: 60vh; overflow: auto; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 6px; box-shadow: 0 6px 24px rgba(0,0,0,.18); padding: 4px 0;
+}
+.menu .list h4 { margin: 6px 10px 2px; font-size: 11px; color: var(--muted); text-transform: uppercase; }
+.menu .list button { display: block; width: 100%; text-align: left; border: 0; border-radius: 0;
+  background: transparent; padding: 3px 12px; }
+.menu .list button:hover { background: var(--accent-soft); }
+#tabbar {
+  display: flex; align-items: end; gap: 2px; padding: 8px 14px 0; flex-wrap: wrap;
+  border-bottom: 1px solid var(--line); background: var(--bg);
+}
+.tab {
+  display: flex; align-items: center; gap: 4px; padding: 4px 6px 4px 8px;
+  border: 1px solid var(--line); border-bottom: 0; border-radius: 6px 6px 0 0;
+  background: var(--chip); cursor: pointer; margin-bottom: -1px; user-select: none;
+}
+.tab.on { background: var(--panel); border-color: var(--line); position: relative; }
+.tab.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent); }
+.tab.off .tname { text-decoration: line-through; color: var(--muted); }
+.tab.dragover { border-color: var(--accent); }
+.tab .count { font-size: 11px; color: var(--muted); background: var(--bg); border-radius: 8px; padding: 0 6px; }
+.tab input.rename { width: 120px; padding: 1px 4px; }
+.tname.bad { border: 0 !important; }
+#tabbar .addtab { margin: 0 0 4px 4px; }
+#editor { flex: 1; overflow: auto; padding: 14px 18px 60px; background: var(--panel); }
+
+/* settings */
+.grid { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 8px 12px; align-items: start; max-width: 980px; }
+.grid > .lab { padding-top: 4px; color: var(--muted); text-align: right; }
+.line { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.line select.model { max-width: 320px; }
+.line input.custom { flex: 1; min-width: 220px; }
+.tag { font-size: 12px; color: var(--muted); background: var(--chip); border-radius: 10px; padding: 1px 8px; }
+.loras { display: flex; flex-direction: column; gap: 4px; }
+.lora { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.lora select { max-width: 240px; }
+.lora input.custom { width: 220px; }
+.lora input.scale { width: 64px; }
+.lora input.trigger { width: 170px; }
+.num { width: 76px; }
+.mid { width: 150px; }
+#negative { min-height: 30px; }
+details.extra summary { cursor: pointer; color: var(--muted); }
+details.extra textarea { margin-top: 4px; font: 12px ui-monospace, Menlo, monospace; min-height: 60px; }
+.prompts-head { display: flex; align-items: center; gap: 8px; margin: 22px 0 8px; max-width: 980px;
+  border-top: 1px solid var(--line); padding-top: 12px; }
+.prompts-head h3 { margin: 0; font-size: 13px; }
+.prompts-head .spacer { flex: 1; }
+.prompt { display: grid; grid-template-columns: auto 120px minmax(0, 1fr) auto; gap: 6px; align-items: start;
+  max-width: 980px; padding: 5px 0; border-bottom: 1px dashed var(--line); }
+.prompt.off textarea, .prompt.off .pname { opacity: .5; }
+.prompt > input[type=checkbox] { margin-top: 7px; }
+.prompt textarea.text { min-height: 30px; overflow: hidden; resize: none; line-height: 1.4; }
+.prompt .acts { display: flex; gap: 0; }
+.prompt .acts button.has { color: var(--accent); }
+.prompt .over { grid-column: 2 / 5; }
+.prompt .over textarea { font: 12px ui-monospace, Menlo, monospace; min-height: 54px; }
+.empty { color: var(--muted); padding: 20px 0; }
+
+/* side */
+#side { height: 100vh; overflow: auto; background: var(--panel); border-left: 1px solid var(--line);
+  padding: 10px 14px 30px; display: flex; flex-direction: column; gap: 10px; }
+#side h2 { margin: 2px 0 0; font-size: 12px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+#side section { border: 1px solid var(--line); border-radius: 7px; padding: 10px; display: flex; flex-direction: column; gap: 7px; }
+#side label.blk { display: flex; flex-direction: column; gap: 2px; color: var(--muted); }
+#side label.blk input { color: var(--text); }
+.seg { display: flex; gap: 14px; }
+.seg label { cursor: pointer; }
+.row2 { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--idle); flex: none; }
+.dot.connecting { background: var(--warn); } .dot.ready { background: var(--ok); } .dot.error { background: var(--bad); }
+#connMsg { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; }
+.kv > span:nth-child(odd) { color: var(--muted); }
+.big { font-variant-numeric: tabular-nums; font-weight: 600; }
+.bar { height: 7px; background: var(--chip); border-radius: 4px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .4s; }
+.bar.thin { height: 4px; }
+.phases { display: flex; gap: 4px; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
+.phases span.now { color: var(--text); font-weight: 600; }
+.phases span.past { color: var(--ok); }
+.list-s { margin: 0; padding-left: 16px; overflow-wrap: anywhere; }
+.list-s li { margin: 1px 0; }
+.errors li { color: var(--bad); } .warnings li { color: var(--warn); }
+.ftable { width: 100%; border-collapse: collapse; font-size: 12px; }
+.ftable td { padding: 1px 4px 1px 0; vertical-align: top; overflow-wrap: anywhere; }
+.ftable td.how { white-space: nowrap; color: var(--muted); }
+#thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+#thumbs a { display: block; aspect-ratio: 1; background: var(--chip); border-radius: 4px; overflow: hidden; }
+#thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#logBox summary { cursor: pointer; color: var(--muted); }
+#log { max-height: 280px; overflow: auto; font: 11px/1.35 ui-monospace, Menlo, monospace; white-space: pre-wrap;
+  background: var(--field); border: 1px solid var(--line); border-radius: 5px; padding: 6px; margin: 6px 0 0; }
+#modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; z-index: 50; }
+#modal[hidden] { display: none; }
+#modal .box { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; width: min(640px, 92vw); display: flex; flex-direction: column; gap: 8px; }
+#modal textarea { min-height: 260px; }
+.dialog { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; z-index: 50; }
+.dialog[hidden] { display: none; }
+.dialog .box { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px;
+  width: min(760px, 94vw); max-height: 90vh; overflow: auto; display: flex; flex-direction: column; gap: 8px; }
+.row2.end { justify-content: flex-end; }
+.setrow { display: flex; flex-direction: column; gap: 3px; padding: 6px 0; border-top: 1px solid var(--line); }
+.setrow .setlab { font-weight: 600; }
+.setrow input:not([type]), .setrow input[type=password], .setrow select { flex: 1; min-width: 200px; }
+.setrow > .tag { align-self: flex-start; }
+.tag.oktag { color: var(--ok); }
+.ok { color: var(--ok); } .warnline { color: var(--warn); }
+.browse { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 10px; min-height: 340px; }
+.browse .places { display: flex; flex-direction: column; gap: 2px; overflow: auto; max-height: 52vh; }
+.browse .places button { text-align: left; overflow: hidden; text-overflow: ellipsis; }
+.browse .main { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 0; }
+.crumbs button.icon { color: var(--accent); padding: 1px 3px; }
+.entries { border: 1px solid var(--line); border-radius: 5px; overflow: auto; max-height: 44vh; min-height: 240px; }
+.entry { padding: 3px 8px; cursor: pointer; display: flex; justify-content: space-between; gap: 10px; }
+.entry:hover { background: var(--chip); }
+.entry.on { background: var(--accent-soft); }
+.entry.dir { color: var(--muted); }
+#noKey button { margin-left: 4px; }
+@media (max-width: 600px) { .browse { grid-template-columns: 1fr; } .browse .places { flex-direction: row; flex-wrap: wrap; } }
+#toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--text); color: var(--panel);
+  padding: 6px 14px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 60; }
+#toast.show { opacity: .92; }
+@media (max-width: 900px) {
+  body { grid-template-columns: 1fr; overflow: auto; height: auto; }
+  #main, #side { height: auto; }
+  #editor { overflow: visible; }
+  .grid { grid-template-columns: 1fr; } .grid > .lab { text-align: left; padding: 0; }
+  .prompt { grid-template-columns: auto minmax(0, 1fr) auto; } .prompt .pname { grid-column: 2; }
+  .prompt textarea.text { grid-column: 1 / 4; } .prompt .over { grid-column: 1 / 4; }
+}
+</style>
+</head>
+<body>
+<div id="main">
+  <header id="top">
+    <span class="brand">jenair</span>
+    <button id="newBtn" data-t="new"></button>
+    <div class="menu"><button id="openBtn"></button><div class="list" id="openList" hidden></div></div>
+    <button id="saveBtn" data-t="save"></button>
+    <button id="saveAsBtn" data-t="saveAs"></button>
+    <button id="importBtn" data-t="import"></button>
+    <button id="exportBtn" data-t="export"></button>
+    <span class="file" id="fileLabel"></span>
+    <span class="spacer"></span>
+    <label><span data-t="output"></span><input id="output" spellcheck="false"></label>
+    <button id="settingsBtn" title="Settings"></button>
+    <button id="langBtn" class="icon"></button>
+  </header>
+  <nav id="tabbar"></nav>
+  <section id="editor"></section>
+</div>
+<aside id="side">
+  <h2 data-t="renderTitle"></h2>
+  <section>
+    <div class="seg">
+      <label><input type="radio" name="target" value="local"><span data-t="local"></span></label>
+      <label><input type="radio" name="target" value="runpod"><span data-t="runpod"></span></label>
+    </div>
+    <div id="localOpts">
+      <label class="blk"><span data-t="comfyUrl"></span><input id="comfyUrl" spellcheck="false"></label>
+    </div>
+    <div id="podOpts">
+      <div class="row2">
+        <label><span data-t="maxHours"></span> <input id="maxHours" class="num" type="number" min="0.25" max="24" step="0.25" value="3"></label>
+        <label><input type="checkbox" id="secure"><span data-t="secure"></span></label>
+      </div>
+      <p class="hint" id="noKey" hidden></p>
+    </div>
+    <div class="row2">
+      <button id="connectBtn" class="primary" data-t="connect"></button>
+      <button id="disconnectBtn" hidden></button>
+      <span class="dot" id="dot"></span><span id="connMsg" class="muted"></span>
+    </div>
+    <div id="connDetail"></div>
+  </section>
+  <section>
+    <div id="summary" class="big"></div>
+    <div class="row2">
+      <label><input type="checkbox" id="overwrite"><span data-t="overwrite"></span></label>
+      <label><input type="checkbox" id="keepGoing"><span data-t="keepGoing"></span></label>
+    </div>
+    <div class="row2">
+      <button id="checkBtn" data-t="check"></button>
+      <button id="renderBtn" class="primary"></button>
+      <button id="cancelBtn" data-t="cancel" hidden></button>
+    </div>
+    <div id="checkOut"></div>
+    <div id="progress"></div>
+    <div id="thumbs"></div>
+  </section>
+  <details id="logBox"><summary data-t="log"></summary><pre id="log"></pre></details>
+</aside>
+<div id="modal" hidden>
+  <div class="box">
+    <b id="modalTitle"></b>
+    <span class="hint" id="modalHint"></span>
+    <textarea id="modalText" spellcheck="false"></textarea>
+    <div class="row2"><span class="spacer" style="flex:1"></span><button id="modalCancel" data-t="cancel"></button><button id="modalOk" class="primary" data-t="add"></button></div>
+  </div>
+</div>
+<div id="settingsBox" class="dialog" hidden><div class="box wide"></div></div>
+<div id="browser" class="dialog" hidden><div class="box wide"></div></div>
+<div id="toast"></div>
+<input type="file" id="importFile" accept=".json,application/json" hidden>
+<datalist id="dlSamplers"></datalist>
+<datalist id="dlSchedulers"></datalist>
+<script id="convert">
+// Job JSON <-> the page's tabs. Pure functions (no page access), so they also
+// run under Node in the test suite. The rules mirror config.expand: a batch's
+// defaults are the top-level defaults with the batch's laid over them, and a
+// layer that names a seed or a size key replaces that whole group.
+var JenairConvert = (function () {
+  "use strict";
+  var GROUPS = [["seed", "seeds"], ["aspect", "width", "height"]];
+  var TOP = ["version", "target", "output", "defaults", "jobs", "batches"];
+
+  function isObject(v) {
+    return v !== null && typeof v === "object" && !Array.isArray(v);
+  }
+  function copy(v) {
+    return v === undefined ? undefined : JSON.parse(JSON.stringify(v));
+  }
+  function has(o, k) {
+    return Object.prototype.hasOwnProperty.call(o, k);
+  }
+  function isInt(v) {
+    return typeof v === "number" && isFinite(v) && Math.floor(v) === v;
+  }
+
+  // `over` laid on `base`: values replace as a whole, as do the GROUPS.
+  function layer(base, over) {
+    var merged = copy(base) || {};
+    GROUPS.forEach(function (group) {
+      if (group.some(function (k) { return has(over, k); })) {
+        group.forEach(function (k) { delete merged[k]; });
+      }
+    });
+    Object.keys(over).forEach(function (k) { merged[k] = copy(over[k]); });
+    return merged;
+  }
+
+  function blankSettings() {
+    return {
+      model: "", loras: [], negative: "",
+      size: { mode: "default", aspect: "", width: "", height: "" },
+      seeds: [], steps: null, cfg: null, sampler: "", scheduler: ""
+    };
+  }
+
+  // A LoRA entry → a row. `trigger` null means "the LoRA's own"; anything the
+  // page cannot show is kept as it was (`raw`).
+  function loraRow(item) {
+    if (typeof item === "string") {
+      return { name: item, scale: null, trigger: null, extra: {} };
+    }
+    if (isObject(item) && typeof item.name === "string" && item.name &&
+        (item.scale == null || typeof item.scale === "number") &&
+        (item.trigger == null || typeof item.trigger === "string")) {
+      var extra = {};
+      Object.keys(item).forEach(function (k) {
+        if (k !== "name" && k !== "scale" && k !== "trigger") extra[k] = copy(item[k]);
+      });
+      return {
+        name: item.name,
+        scale: item.scale == null ? null : item.scale,
+        trigger: item.trigger == null ? null : item.trigger,
+        extra: extra
+      };
+    }
+    return { raw: copy(item) };
+  }
+
+  function loraOut(row) {
+    if (has(row, "raw")) return copy(row.raw);
+    var extra = row.extra || {};
+    if (row.scale == null && row.trigger == null && !Object.keys(extra).length) {
+      return row.name;
+    }
+    var out = copy(extra);
+    out.name = row.name;
+    if (row.scale != null) out.scale = row.scale;
+    if (row.trigger != null) out.trigger = row.trigger;
+    return out;
+  }
+
+  // Defaults → what the tab's fields show, and the rest (kept as it was).
+  function splitDefaults(d) {
+    var s = blankSettings();
+    var extra = {};
+    var taken = {};
+    function take(k) { taken[k] = true; }
+
+    if (has(d, "model")) {
+      if (d.model !== null) s.model = copy(d.model);
+      else extra.model = null;
+      take("model");
+    }
+    if (has(d, "loras")) {
+      if (Array.isArray(d.loras)) s.loras = d.loras.map(loraRow);
+      else if (d.loras !== null) extra.loras = copy(d.loras);
+      take("loras");
+    }
+    if (has(d, "negative")) {
+      if (typeof d.negative === "string") s.negative = d.negative;
+      else if (d.negative !== null) extra.negative = copy(d.negative);
+      take("negative");
+    }
+    var hasAspect = has(d, "aspect"), hasW = has(d, "width"), hasH = has(d, "height");
+    if (hasAspect && !hasW && !hasH && typeof d.aspect === "string") {
+      s.size = { mode: "aspect", aspect: d.aspect, width: "", height: "" };
+      take("aspect");
+    } else if (!hasAspect && hasW && hasH && isInt(d.width) && isInt(d.height)) {
+      s.size = { mode: "custom", aspect: "", width: d.width, height: d.height };
+      take("width"); take("height");
+    }
+    var hasSeed = has(d, "seed"), hasSeeds = has(d, "seeds");
+    if (hasSeed && !hasSeeds && isInt(d.seed)) {
+      s.seeds = [d.seed];
+      take("seed");
+    } else if (hasSeeds && !hasSeed && Array.isArray(d.seeds) && d.seeds.length &&
+               d.seeds.every(isInt)) {
+      s.seeds = d.seeds.slice();
+      take("seeds");
+    } else if (hasSeeds && !hasSeed && isInt(d.seeds)) {
+      s.seeds = [d.seeds];
+      take("seeds");
+    }
+    ["steps", "cfg"].forEach(function (k) {
+      if (!has(d, k)) return;
+      if (typeof d[k] === "number") s[k] = d[k];
+      else if (d[k] !== null) extra[k] = copy(d[k]);
+      take(k);
+    });
+    ["sampler", "scheduler"].forEach(function (k) {
+      if (!has(d, k)) return;
+      if (typeof d[k] === "string" && d[k]) s[k] = d[k];
+      else if (d[k] !== null) extra[k] = copy(d[k]);
+      take(k);
+    });
+    Object.keys(d).forEach(function (k) {
+      if (!taken[k]) extra[k] = copy(d[k]);
+    });
+    return { settings: s, extra: extra };
+  }
+
+  // One batch (name, merged defaults, jobs) → a tab.
+  function tabOf(name, defaults, jobs, skip, batchExtra) {
+    var d = copy(defaults) || {};
+    var prompts = (jobs || []).map(function (job, i) {
+      if (!isObject(job)) return { name: "job" + (i + 1), prompt: "", skip: false,
+                                    overrides: {}, raw: copy(job) };
+      var name = has(job, "name") ? job.name : d.name;
+      var prompt = has(job, "prompt") ? job.prompt : d.prompt;
+      var skipped = has(job, "skip") ? job.skip : d.skip;
+      var overrides = {};
+      Object.keys(job).forEach(function (k) {
+        if (k !== "name" && k !== "prompt" && k !== "skip") overrides[k] = copy(job[k]);
+      });
+      if (prompt != null && typeof prompt !== "string") {
+        overrides.prompt = copy(prompt);
+        prompt = "";
+      }
+      return {
+        name: name ? String(name) : "job" + (i + 1),
+        prompt: prompt == null ? "" : prompt,
+        skip: !!skipped,
+        overrides: overrides
+      };
+    });
+    delete d.name;
+    delete d.prompt;
+    delete d.skip;
+    var split = splitDefaults(d);
+    return {
+      name: String(name), skip: !!skip, settings: split.settings, extra: split.extra,
+      batchExtra: batchExtra || {}, prompts: prompts
+    };
+  }
+
+  // Any job file → {target, output, extra, tabs}.
+  function importProject(data) {
+    if (!isObject(data)) throw new Error("a job file is a JSON object");
+    var project = { target: "", output: "", extra: {}, tabs: [] };
+    if (typeof data.target === "string") project.target = data.target;
+    else if (has(data, "target")) project.extra.target = copy(data.target);
+    if (typeof data.output === "string") project.output = data.output;
+    else if (has(data, "output")) project.extra.output = copy(data.output);
+    var batches = has(data, "batches"), jobs = has(data, "jobs");
+    if (!batches && !jobs) {  // a bare single job
+      var job = {}, defaults = {};
+      Object.keys(data).forEach(function (k) {
+        if (TOP.indexOf(k) >= 0) {
+          if (k === "version") project.extra.version = copy(data.version);
+          return;
+        }
+        if (k.charAt(0) === "_") project.extra[k] = copy(data[k]);
+        else if (k === "name" || k === "prompt" || k === "skip") job[k] = copy(data[k]);
+        else defaults[k] = copy(data[k]);
+      });
+      project.tabs.push(tabOf("main", defaults, [job], false, {}));
+      return project;
+    }
+    Object.keys(data).forEach(function (k) {
+      if (["target", "output", "defaults", "batches"].indexOf(k) >= 0) return;
+      if (k === "jobs" && !batches) return;
+      project.extra[k] = copy(data[k]);
+    });
+    var top = isObject(data.defaults) ? data.defaults : {};
+    if (batches) {  // comments of the shared defaults stay there, not in every tab
+      var notes = {}, rest = {};
+      Object.keys(top).forEach(function (k) {
+        if (k.charAt(0) === "_") notes[k] = copy(top[k]); else rest[k] = top[k];
+      });
+      if (Object.keys(notes).length) project.extra.defaults = notes;
+      top = rest;
+    }
+    if (!batches) {
+      project.tabs.push(tabOf("main", top, Array.isArray(data.jobs) ? data.jobs : [],
+                              false, {}));
+      return project;
+    }
+    (Array.isArray(data.batches) ? data.batches : []).forEach(function (b, i) {
+      if (!isObject(b)) b = {};
+      var own = isObject(b.defaults) ? b.defaults : {};
+      var extra = {};
+      Object.keys(b).forEach(function (k) {
+        if (["name", "defaults", "jobs", "skip"].indexOf(k) < 0) extra[k] = copy(b[k]);
+      });
+      var name = typeof b.name === "string" ? b.name : "batch" + (i + 1);
+      project.tabs.push(tabOf(name, layer(top, own), b.jobs, b.skip, extra));
+    });
+    return project;
+  }
+
+  function seedsOut(d, seeds) {
+    if (!seeds || !seeds.length) return;
+    delete d.seed;
+    delete d.seeds;
+    if (seeds.length === 1) d.seed = seeds[0];
+    else d.seeds = seeds.slice();
+  }
+
+  // A tab's fields (and kept keys) → the batch's defaults.
+  function defaultsOut(tab) {
+    var s = tab.settings, d = copy(tab.extra) || {};
+    var model = s.model;
+    if (model !== "" && model !== undefined && model !== null) d.model = copy(model);
+    var loras = (s.loras || []).filter(function (r) { return has(r, "raw") || r.name; });
+    if (loras.length) d.loras = loras.map(loraOut);
+    if (s.negative) d.negative = s.negative;
+    var size = s.size || {};
+    if (size.mode === "aspect" && size.aspect) {
+      delete d.width; delete d.height;
+      d.aspect = size.aspect;
+    } else if (size.mode === "custom" && size.width !== "" && size.height !== "" &&
+               size.width != null && size.height != null) {
+      delete d.aspect;
+      d.width = Number(size.width);
+      d.height = Number(size.height);
+    }
+    seedsOut(d, s.seeds);
+    if (s.steps != null && s.steps !== "") d.steps = Number(s.steps);
+    if (s.cfg != null && s.cfg !== "") d.cfg = Number(s.cfg);
+    if (s.sampler) d.sampler = s.sampler;
+    if (s.scheduler) d.scheduler = s.scheduler;
+    return d;
+  }
+
+  function jobOut(p, defaults) {
+    if (has(p, "raw")) return copy(p.raw);
+    var job = { name: p.name, prompt: p.prompt };
+    var o = p.overrides || {};
+    Object.keys(o).forEach(function (k) {
+      if (k === "name" || k === "skip") return;
+      if (k === "prompt" && p.prompt !== "") return;
+      job[k] = copy(o[k]);
+    });
+    if (p.skip) job.skip = true;
+    else if (defaults.skip) job.skip = false;
+    return job;
+  }
+
+  // {target, output, extra, tabs} → a job file, always with batches.
+  function exportProject(project) {
+    var out = {};
+    Object.keys(project.extra || {}).forEach(function (k) {
+      if (k.charAt(0) === "_" || k === "version") out[k] = copy(project.extra[k]);
+    });
+    if (project.target) out.target = project.target;
+    if (project.output) out.output = project.output;
+    Object.keys(project.extra || {}).forEach(function (k) {
+      if (!has(out, k)) out[k] = copy(project.extra[k]);
+    });
+    out.batches = project.tabs.map(function (tab) {
+      var b = {};
+      Object.keys(tab.batchExtra || {}).forEach(function (k) {
+        if (k.charAt(0) === "_") b[k] = copy(tab.batchExtra[k]);
+      });
+      b.name = tab.name;
+      if (tab.skip) b.skip = true;
+      Object.keys(tab.batchExtra || {}).forEach(function (k) {
+        if (!has(b, k)) b[k] = copy(tab.batchExtra[k]);
+      });
+      var defaults = defaultsOut(tab);
+      b.defaults = defaults;
+      b.jobs = tab.prompts.map(function (p) { return jobOut(p, defaults); });
+      return b;
+    });
+    return out;
+  }
+
+  return {
+    layer: layer, importProject: importProject, exportProject: exportProject,
+    blankSettings: blankSettings, loraRow: loraRow, loraOut: loraOut
+  };
+})();
+if (typeof module !== "undefined") module.exports = JenairConvert;
+</script>
+<script id="ui">
+(function () {
+  "use strict";
+  var C = JenairConvert;
+  var TOKEN = document.querySelector('meta[name="jenair-token"]').content;
+
+  // ── strings ─────────────────────────────────────────────────────────
+  var T = {
+    en: {
+      new: "New", open: "Open", save: "Save", saveAs: "Save as…", import: "Import",
+      export: "Export", untitled: "untitled", output: "Output folder",
+      outputHint: "outputs/<this>/<tab>/<model>/",
+      openJobs: "Your job files (jobs/)", openExamples: "Examples (configs/)",
+      openNone: "nothing here yet", lang: "한국어",
+      addTab: "Add a tab", duplicate: "Duplicate", closeTab: "Close tab",
+      renameHint: "Double-click to rename. The tab name is the batch name and its output folder.",
+      tabUse: "Render this tab", badTabName: "A tab name is a plain folder name (no / \\ : * ? \" < > |, not starting with a dot) and unique.",
+      model: "Model", chooseModel: "— choose a model —", customModel: "Other: type a name or address…",
+      customModelHint: "name, file name, hf://owner/repo/file or https://… (a list or object as JSON)",
+      engine: "engine", engines: "engines", engineUnknown: "engine unknown",
+      src_built_in: "Built in", src_models_folder: "Models folder", src_ComfyUI: "ComfyUI folders",
+      src_storage: "Your storage",
+      loras: "LoRAs", addLora: "+ LoRA", chooseLora: "— choose a LoRA —",
+      customLora: "Other: type a name or address…", scale: "scale", trigger: "trigger",
+      useTrigger: "Add trigger words (unchecked: none)", ownTrigger: "its own trigger",
+      noTriggerKnown: "trigger words", wrongEngine: "This LoRA is for {engine}, not for this model",
+      size: "Size", sizeDefault: "engine default", sizeAspect: "aspect", sizeCustom: "custom",
+      seeds: "Seeds", seedsHint: "1, 2, 3", random: "+ random",
+      seedsBad: "Seeds are whole numbers separated by commas",
+      sampling: "Sampling", steps: "Steps", cfg: "CFG", sampler: "Sampler", scheduler: "Scheduler",
+      cfgFixed: "{engine} always runs at CFG 1: this value is not used",
+      negative: "Negative", negOff: "{engine} does not use a negative prompt",
+      negKrea: "krea2 uses a negative prompt only when CFG is above 1",
+      other: "Other keys", otherHint: "Keys this page has no field for, kept as they are (JSON object).",
+      jsonBad: "Not a valid JSON object",
+      prompts: "Prompts", add: "+ Add", pasteMany: "Paste many",
+      pasteTitle: "Paste prompts", pasteHint: "Separate prompts with an empty line: each block becomes one prompt.",
+      use: "Render this prompt", name: "name (file name)", promptHint: "prompt",
+      up: "Move up", down: "Move down", dupPrompt: "Duplicate", remove: "Remove",
+      overrides: "Overrides for this prompt only",
+      overridesHint: "Settings for this prompt only, as JSON, e.g. {\"seed\": 7, \"aspect\": \"16:9\", \"loras\": []}",
+      noPrompts: "No prompts yet: add one.",
+      images: "{n} images", imagesOne: "1 image", tabsSummary: "{n} images · {tabs} of {all} tabs",
+      renderTitle: "Render", local: "Local", runpod: "RunPod", comfyUrl: "ComfyUI address",
+      maxHours: "hard limit (h)", secure: "Secure Cloud only",
+      noKey: "No RunPod key yet.",
+      connect: "Connect", disconnect: "Disconnect", stopPod: "Stop pod",
+      st_idle: "not connected", st_connecting: "connecting…", st_ready: "ready", st_error: "error",
+      version: "ComfyUI", device: "device", sameComputer: "same computer",
+      sameYes: "yes: missing files are downloaded or linked into it",
+      sameNo: "no: its files are used by name only",
+      gpu: "GPU", autoStop: "auto-stop in", hardLimit: "hard limit in", balance: "balance",
+      perHour: "spend / h", phase_renting: "renting", "phase_pulling image": "pulling image",
+      "phase_starting ComfyUI": "starting ComfyUI", phase_ready: "ready", phase_stopping: "stopping",
+      typical: "usually about {m} min", secureAttempt: "Community did not start: Secure Cloud, host {n}",
+      overwrite: "re-render saved images", keepGoing: "continue after a failure",
+      check: "Check", render: "▶ Render", rendering: "Rendering…", cancel: "Cancel",
+      checkOk: "Ready to render", checkBad: "Cannot render yet", errors: "Errors", warnings: "Warnings",
+      toRender: "{n} to render", saved: "{n} already saved", files: "Files",
+      how_fetch: "pod downloads", how_upload: "upload", how_storage: "via your storage",
+      how_local: "ComfyUI must have it", how_have: "ComfyUI has it", how_download: "download",
+      how_link: "link", how_missing: "missing", how_done: "done", how_waiting: "waiting",
+      nothing: "Nothing to render: every image is already saved (tick re-render to redo).",
+      eta: "ETA {t}", step: "step {s}/{n}", failures: "Failed", filesProgress: "Files",
+      cancelled: "Cancelled", done: "Done: {d} saved, {f} failed", renderError: "Stopped: {m}",
+      log: "Log", serverDown: "jenair ui is not answering (was it stopped?)",
+      confirmRent: "Connect to RunPod? If no pod of yours is running, a GPU is rented now. It is billed until it stops: after {idle} idle minutes, at the hard limit ({hours} h), or with Stop pod.",
+      confirmRentRender: "Render on RunPod? This connects first: if no pod of yours is running, a GPU is rented now (billed until it stops by itself or with Stop pod).",
+      confirmStop: "Stop the pod now? Images already saved are kept.",
+      confirmOverwrite: "Re-render images that are already saved? They will be replaced.",
+      confirmDiscard: "Discard the unsaved changes?", confirmCloseTab: "Close the tab \"{name}\" and its {n} prompts?",
+      saveName: "Save as jobs/<name>.json — name:", confirmReplace: "jobs/{name}.json exists. Replace it?",
+      savedTo: "Saved {path}", fixJson: "Fix these first:", copySuffix: "-copy",
+      reload: "↻", reloadHint: "Look for models and LoRAs again",
+      browse: "Browse…", browseLora: "+ LoRA from a file…", noKeyBtn: "Open Settings",
+      settings: "⚙ Settings", setWhere: "Saved in {file} in the project folder (readable only by you). Keys are never shown again.",
+      setRunpod: "RunPod API key", setRunpodHint: "RunPod console → Settings → API Keys.",
+      setHf: "Hugging Face token", setHfHint: "huggingface.co → Settings → Access Tokens. Private or gated files; write access is needed for your storage.",
+      setCivitai: "Civitai token", setCivitaiHint: "civitai.com → Account → API Keys. Civitai blocks most datacenter IPs, so on RunPod prefer a file in models/ or your storage.",
+      setIsSet: "set", setNotSet: "not set", setWillClear: "will be cleared", setKeep: "leave empty to keep it",
+      setPaste: "paste it here", setClear: "Clear", setTest: "Test",
+      setFromEnv: "A real environment variable also sets this, and it wins over .env until you change it there.",
+      setStorage: "Storage", setStorageHint: "hf://owner/repo: your files only on this computer are uploaded there once (needs a write token).",
+      setTarget: "Default target", setTargetHint: "Where the command line renders when nothing else says so.",
+      setTargetDefault: "(not set: local)", setAdvanced: "Advanced",
+      setPodImage: "Pod image", setPodImageHint: "Your own build of the pod image (JENA_POD_IMAGE).",
+      setModelsDir: "Models folder", setModelsDirHint: "Where your own files are looked up (JENA_MODELS_DIR, default ./models).",
+      setSaved: "Settings saved to {file}",
+      brTitleLora: "Pick a LoRA file on this computer", brTitleModel: "Pick a model file on this computer",
+      brFilter: "filter", brSelect: "Select", brEmpty: "No folders or weight files here.",
+      brOnly: "only for {engine} (put in models/loras/{engine}/)", brNoEngine: "for any engine (choose the tab's model first to tie it to one)",
+      brOnlyHint: "Ties the LoRA to the engine, so it is checked against the model",
+      brCheckpoint: "checkpoint (SDXL type)", brDiffusion: "diffusion model for",
+      brHow: "The file is linked into your models folder (not copied when a link is possible) and used by its name.",
+      brReplace: "Replace it with the file you picked?",
+      imLinked: "{name}: linked into {folder} — not copied; on RunPod it is uploaded or sent to your storage.",
+      imHard: "{name}: hard-linked into {folder} — no extra space; on RunPod it is uploaded or sent to your storage.",
+      imCopied: "{name}: copied into {folder} (links are not allowed there); on RunPod it is uploaded or sent to your storage.",
+      imThere: "{name}: already in {folder}, used by its name."
+    },
+    ko: {
+      new: "새로", open: "열기", save: "저장", saveAs: "다른 이름으로…", import: "가져오기",
+      export: "내보내기", untitled: "제목 없음", output: "출력 폴더",
+      outputHint: "outputs/<이것>/<탭>/<모델>/",
+      openJobs: "내 작업 파일 (jobs/)", openExamples: "예시 (configs/)",
+      openNone: "아직 없음", lang: "English",
+      addTab: "탭 추가", duplicate: "복제", closeTab: "탭 닫기",
+      renameHint: "더블클릭해서 이름 바꾸기. 탭 이름이 배치 이름이자 출력 폴더예요.",
+      tabUse: "이 탭 렌더", badTabName: "탭 이름은 폴더 이름으로 쓸 수 있어야 해요(/ \\ : * ? \" < > | 없이, 점으로 시작하지 않게), 그리고 겹치면 안 돼요.",
+      model: "모델", chooseModel: "— 모델 선택 —", customModel: "직접 입력: 이름이나 주소…",
+      customModelHint: "이름, 파일 이름, hf://owner/repo/file 또는 https://… (목록·객체는 JSON)",
+      engine: "엔진", engines: "엔진", engineUnknown: "엔진 모름",
+      src_built_in: "내장", src_models_folder: "models 폴더", src_ComfyUI: "ComfyUI 폴더",
+      src_storage: "내 스토리지",
+      loras: "LoRA", addLora: "+ LoRA", chooseLora: "— LoRA 선택 —",
+      customLora: "직접 입력: 이름이나 주소…", scale: "강도", trigger: "트리거",
+      useTrigger: "트리거 단어 넣기 (해제: 넣지 않음)", ownTrigger: "기본 트리거",
+      noTriggerKnown: "트리거 단어", wrongEngine: "이 LoRA는 {engine}용이라 이 모델과 맞지 않아요",
+      size: "크기", sizeDefault: "엔진 기본값", sizeAspect: "비율", sizeCustom: "직접",
+      seeds: "시드", seedsHint: "1, 2, 3", random: "+ 무작위",
+      seedsBad: "시드는 쉼표로 구분한 정수예요",
+      sampling: "샘플링", steps: "스텝", cfg: "CFG", sampler: "샘플러", scheduler: "스케줄러",
+      cfgFixed: "{engine}은(는) 항상 CFG 1로 돌아서 이 값은 쓰이지 않아요",
+      negative: "네거티브", negOff: "{engine}은(는) 네거티브 프롬프트를 쓰지 않아요",
+      negKrea: "krea2는 CFG가 1보다 클 때만 네거티브를 써요",
+      other: "그 밖의 키", otherHint: "이 화면에 칸이 없는 키를 그대로 보존해요 (JSON 객체).",
+      jsonBad: "올바른 JSON 객체가 아니에요",
+      prompts: "프롬프트", add: "+ 추가", pasteMany: "여러 개 붙여넣기",
+      pasteTitle: "프롬프트 붙여넣기", pasteHint: "빈 줄로 구분하면 덩어리마다 프롬프트 하나가 돼요.",
+      use: "이 프롬프트 렌더", name: "이름 (파일 이름)", promptHint: "프롬프트",
+      up: "위로", down: "아래로", dupPrompt: "복제", remove: "삭제",
+      overrides: "이 프롬프트만의 설정",
+      overridesHint: "이 프롬프트에만 적용할 설정(JSON), 예: {\"seed\": 7, \"aspect\": \"16:9\", \"loras\": []}",
+      noPrompts: "아직 프롬프트가 없어요. 하나 추가해 보세요.",
+      images: "이미지 {n}장", imagesOne: "이미지 1장", tabsSummary: "이미지 {n}장 · 탭 {tabs}/{all}개",
+      renderTitle: "렌더", local: "로컬", runpod: "RunPod", comfyUrl: "ComfyUI 주소",
+      maxHours: "최대 시간(h)", secure: "Secure Cloud만",
+      noKey: "RunPod 키가 아직 없어요.",
+      connect: "접속", disconnect: "연결 끊기", stopPod: "Pod 종료",
+      st_idle: "연결 안 됨", st_connecting: "접속 중…", st_ready: "준비됨", st_error: "오류",
+      version: "ComfyUI", device: "장치", sameComputer: "같은 컴퓨터",
+      sameYes: "예: 없는 파일은 자동으로 받거나 연결해요",
+      sameNo: "아니요: 이미 있는 파일만 이름으로 써요",
+      gpu: "GPU", autoStop: "자동 종료까지", hardLimit: "최대 시간까지", balance: "잔액",
+      perHour: "시간당", phase_renting: "대여 중", "phase_pulling image": "이미지 받는 중",
+      "phase_starting ComfyUI": "ComfyUI 시작 중", phase_ready: "준비됨", phase_stopping: "종료 중",
+      typical: "보통 약 {m}분", secureAttempt: "Community 시작 실패: Secure Cloud, 호스트 {n}",
+      overwrite: "저장된 이미지 다시 렌더", keepGoing: "실패해도 계속",
+      check: "검사", render: "▶ 렌더", rendering: "렌더 중…", cancel: "취소",
+      checkOk: "렌더할 수 있어요", checkBad: "아직 렌더할 수 없어요", errors: "오류", warnings: "경고",
+      toRender: "렌더할 것 {n}장", saved: "이미 저장됨 {n}장", files: "파일",
+      how_fetch: "Pod이 받음", how_upload: "업로드", how_storage: "스토리지 경유",
+      how_local: "ComfyUI에 있어야 함", how_have: "ComfyUI에 있음", how_download: "받기",
+      how_link: "연결", how_missing: "없음", how_done: "완료", how_waiting: "대기",
+      nothing: "렌더할 게 없어요: 모든 이미지가 이미 저장돼 있어요 (다시 하려면 '다시 렌더'를 체크).",
+      eta: "남은 시간 {t}", step: "스텝 {s}/{n}", failures: "실패", filesProgress: "파일",
+      cancelled: "취소됨", done: "완료: {d}장 저장, {f}장 실패", renderError: "멈춤: {m}",
+      log: "로그", serverDown: "jenair ui가 응답하지 않아요 (꺼졌나요?)",
+      confirmRent: "RunPod에 접속할까요? 실행 중인 Pod이 없으면 지금 GPU를 빌려요. 멈출 때까지 요금이 나가요: 유휴 {idle}분 뒤, 최대 시간({hours}시간), 또는 Pod 종료 버튼.",
+      confirmRentRender: "RunPod에서 렌더할까요? 먼저 접속해요: 실행 중인 Pod이 없으면 지금 GPU를 빌려요 (스스로 멈추거나 Pod 종료할 때까지 요금이 나가요).",
+      confirmStop: "지금 Pod을 종료할까요? 저장된 이미지는 그대로 남아요.",
+      confirmOverwrite: "이미 저장된 이미지를 다시 렌더할까요? 덮어써요.",
+      confirmDiscard: "저장하지 않은 변경을 버릴까요?", confirmCloseTab: "\"{name}\" 탭과 프롬프트 {n}개를 닫을까요?",
+      saveName: "jobs/<이름>.json으로 저장 — 이름:", confirmReplace: "jobs/{name}.json이 이미 있어요. 바꿀까요?",
+      savedTo: "{path}에 저장했어요", fixJson: "먼저 이것부터 고쳐 주세요:", copySuffix: "-복사",
+      reload: "↻", reloadHint: "모델과 LoRA를 다시 찾기",
+      browse: "찾아보기…", browseLora: "+ 파일에서 LoRA…", noKeyBtn: "설정 열기",
+      settings: "⚙ 설정", setWhere: "프로젝트 폴더의 {file}에 저장해요 (본인만 읽을 수 있어요). 키는 다시 보여주지 않아요.",
+      setRunpod: "RunPod API 키", setRunpodHint: "RunPod 콘솔 → Settings → API Keys.",
+      setHf: "Hugging Face 토큰", setHfHint: "huggingface.co → Settings → Access Tokens. 비공개·게이트 파일용이고, 내 스토리지에는 쓰기 권한이 필요해요.",
+      setCivitai: "Civitai 토큰", setCivitaiHint: "civitai.com → Account → API Keys. Civitai는 데이터센터 IP를 대부분 막아서, RunPod에서는 models/ 폴더나 내 스토리지의 파일이 나아요.",
+      setIsSet: "설정됨", setNotSet: "설정 안 됨", setWillClear: "지워질 예정", setKeep: "비워두면 그대로 둬요",
+      setPaste: "여기에 붙여넣기", setClear: "지우기", setTest: "확인",
+      setFromEnv: "실제 환경 변수에도 설정돼 있어서, 거기서 바꾸기 전까지는 그 값이 .env보다 우선해요.",
+      setStorage: "스토리지", setStorageHint: "hf://owner/repo: 이 컴퓨터에만 있는 파일을 한 번 올려둬요 (쓰기 토큰 필요).",
+      setTarget: "기본 대상", setTargetHint: "명령줄에서 따로 정하지 않았을 때 렌더할 곳이에요.",
+      setTargetDefault: "(설정 안 함: 로컬)", setAdvanced: "고급",
+      setPodImage: "Pod 이미지", setPodImageHint: "직접 빌드한 Pod 이미지 (JENA_POD_IMAGE).",
+      setModelsDir: "models 폴더", setModelsDirHint: "내 파일을 찾는 폴더 (JENA_MODELS_DIR, 기본 ./models).",
+      setSaved: "{file}에 설정을 저장했어요",
+      brTitleLora: "이 컴퓨터에서 LoRA 파일 고르기", brTitleModel: "이 컴퓨터에서 모델 파일 고르기",
+      brFilter: "걸러보기", brSelect: "선택", brEmpty: "여기에는 폴더나 가중치 파일이 없어요.",
+      brOnly: "{engine} 전용 (models/loras/{engine}/에 넣기)", brNoEngine: "엔진 상관없이 (탭의 모델을 먼저 고르면 엔진에 묶을 수 있어요)",
+      brOnlyHint: "LoRA를 엔진에 묶어서 모델과 맞는지 확인해요",
+      brCheckpoint: "체크포인트 (SDXL 계열)", brDiffusion: "이 엔진의 diffusion 모델:",
+      brHow: "파일은 models 폴더에 링크로 들어가고(링크가 되면 복사하지 않아요) 이름으로 쓰여요.",
+      brReplace: "고른 파일로 바꿀까요?",
+      imLinked: "{name}: {folder}에 링크했어요 — 복사하지 않았어요. RunPod에서는 업로드되거나 내 스토리지로 보내져요.",
+      imHard: "{name}: {folder}에 하드 링크했어요 — 공간을 더 쓰지 않아요. RunPod에서는 업로드되거나 내 스토리지로 보내져요.",
+      imCopied: "{name}: {folder}에 복사했어요 (링크가 안 되는 곳이라서요). RunPod에서는 업로드되거나 내 스토리지로 보내져요.",
+      imThere: "{name}: 이미 {folder}에 있어서 이름으로 써요."
+    }
+  };
+
+  var store = {
+    get: function (k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { window.localStorage.setItem(k, v); } catch (e) { /* private mode */ } }
+  };
+  var lang = store.get("jenair.lang") ||
+    ((navigator.language || "").toLowerCase().indexOf("ko") === 0 ? "ko" : "en");
+
+  function t(key, vars) {
+    var s = (T[lang] && T[lang][key]) || T.en[key] || key;
+    Object.keys(vars || {}).forEach(function (k) { s = s.split("{" + k + "}").join(vars[k]); });
+    if (lang === "en") s = s.replace(/\b1 (images|tabs|files)\b/g, function (m, w) { return "1 " + w.slice(0, -1); });
+    return s;
+  }
+
+  // ── small helpers ───────────────────────────────────────────────────
+  function $(id) { return document.getElementById(id); }
+  function h(tag, props) {
+    var el = document.createElement(tag);
+    Object.keys(props || {}).forEach(function (k) {
+      var v = props[k];
+      if (v === undefined || v === null || v === false) return;
+      if (k === "class") el.className = v;
+      else if (k === "text") el.textContent = v;
+      else if (k.slice(0, 2) === "on") el.addEventListener(k.slice(2), v);
+      else if (k === "value" || k === "checked" || k === "disabled" || k === "hidden" ||
+               k === "selected") el[k] = v;
+      else el.setAttribute(k, v === true ? "" : String(v));
+    });
+    for (var i = 2; i < arguments.length; i++) add(el, arguments[i]);
+    return el;
+  }
+  function add(el, kid) {
+    if (kid === undefined || kid === null || kid === false) return;
+    if (Array.isArray(kid)) { kid.forEach(function (k) { add(el, k); }); return; }
+    el.append(kid.nodeType ? kid : String(kid));
+  }
+  function clone(v) { return JSON.parse(JSON.stringify(v)); }
+  function clock(seconds) {
+    seconds = Math.max(0, Math.round(seconds || 0));
+    var hh = Math.floor(seconds / 3600), mm = Math.floor(seconds % 3600 / 60), ss = seconds % 60;
+    var two = function (n) { return (n < 10 ? "0" : "") + n; };
+    return hh ? hh + ":" + two(mm) + ":" + two(ss) : mm + ":" + two(ss);
+  }
+  function bytes(n) {
+    if (!n) return "";
+    if (n >= 1e9) return (n / 1e9).toFixed(1) + " GB";
+    if (n >= 1e6) return (n / 1e6).toFixed(0) + " MB";
+    return Math.max(1, Math.round(n / 1e3)) + " kB";
+  }
+  function money(v) { return v == null ? "—" : "$" + Number(v).toFixed(2); }
+  function toast(text) {
+    var el = $("toast");
+    el.textContent = text;
+    el.classList.add("show");
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(function () { el.classList.remove("show"); }, 2200);
+  }
+  function autosize(area) {
+    area.style.height = "auto";
+    area.style.height = (area.scrollHeight + 2) + "px";
+  }
+  function validTabName(name) {
+    return !!name && name.trim() === name && !/[\/\\:*?"<>|]/.test(name) && name.charAt(0) !== ".";
+  }
+
+  function api(method, path, body) {
+    var options = { method: method, headers: { "X-Jenair-Token": TOKEN } };
+    if (body !== undefined) {
+      options.headers["Content-Type"] = "application/json";
+      options.body = JSON.stringify(body);
+    }
+    return fetch(path, options).then(function (res) {
+      var json = (res.headers.get("Content-Type") || "").indexOf("json") >= 0;
+      return (json ? res.json() : res.blob()).then(function (data) {
+        if (!res.ok) {
+          var error = new Error((data && data.error) || res.statusText);
+          error.status = res.status;
+          throw error;
+        }
+        return data;
+      });
+    });
+  }
+
+  // ── state ───────────────────────────────────────────────────────────
+  var META = null;
+  var CHOICES = { models: [], loras: [] };
+  var choicesFor = "";
+  var project = null;
+  var active = 0;
+  var fileName = "";     // saved as jobs/<fileName>.json
+  var sourceLabel = "";  // where it came from, when not jobs/
+  var dirty = false;
+  var STATUS = null, skew = 0, lastState = "";
+  var lastCheck = null;
+  var thumbs = {};
+  var podClock = { elapsed: 0, at: 0, phase: "" };
+  var uid = 1;
+  var editorStale = false;
+
+  function blankPrompt(name, text) {
+    return { id: uid++, name: name, prompt: text || "", skip: false, overrides: {} };
+  }
+  function blankTab(name) {
+    return { id: uid++, name: name, skip: false, settings: C.blankSettings(), extra: {},
+             batchExtra: {}, prompts: [blankPrompt("p1")] };
+  }
+  function prepare(tab) {
+    tab.id = uid++;
+    tab.prompts.forEach(function (p) { p.id = uid++; });
+    return tab;
+  }
+  function target() { return project.target || (META ? META.settings.default_target : "local"); }
+  function tab() { return project.tabs[active]; }
+
+  function touch(structural) {
+    dirty = true;
+    updateTitle();
+    updateCounts();
+    saveDraft();
+    if (structural) renderTabs();
+  }
+  function saveDraft() {
+    clearTimeout(saveDraft.timer);
+    saveDraft.timer = setTimeout(function () {
+      store.set("jenair.draft", JSON.stringify({ project: project, fileName: fileName,
+                                                 sourceLabel: sourceLabel, dirty: dirty }));
+    }, 300);
+  }
+
+  function load(data, name, label) {
+    var next = C.importProject(data);
+    next.tabs.forEach(prepare);
+    if (!next.tabs.length) next.tabs.push(blankTab("batch1"));
+    project = next;
+    active = 0;
+    fileName = name || "";
+    sourceLabel = label || "";
+    dirty = false;
+    lastCheck = null;
+    renderAll();
+    loadChoices();
+    saveDraft();
+  }
+
+  // ── engines ─────────────────────────────────────────────────────────
+  function engineByName(name) {
+    return META.engines.filter(function (e) { return e.name === name; })[0] || null;
+  }
+  function modelEngine(value) {
+    if (typeof value === "string") {
+      if (!value) return null;
+      var known = CHOICES.models.filter(function (m) { return m.name === value; })[0];
+      if (known) return engineByName(known.engine);
+      if (/^(hf|https?):\/\//.test(value)) return engineByName("illustrious");
+      return null;
+    }
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      return engineByName(value.engine);
+    }
+    return null;
+  }
+  function tabEngines(t_) {
+    var m = t_.settings.model;
+    var list = Array.isArray(m) ? m : [m];
+    return list.filter(function (v) { return v !== "" && v != null; }).map(modelEngine);
+  }
+  function oneEngine(engs) {
+    if (!engs.length || engs.some(function (e) { return !e; })) return null;
+    return engs.every(function (e) { return e.name === engs[0].name; }) ? engs[0] : null;
+  }
+
+  function promptImages(t_, p) {
+    if (p.skip || p.raw !== undefined) return 0;
+    var o = p.overrides || {};
+    var seeds = t_.settings.seeds.length || 1;
+    if ("seeds" in o) seeds = Array.isArray(o.seeds) ? o.seeds.length : 1;
+    else if ("seed" in o) seeds = 1;
+    var model = "model" in o ? o.model : t_.settings.model;
+    return seeds * (Array.isArray(model) ? model.length : 1);
+  }
+  function tabImages(t_) {
+    if (t_.skip) return 0;
+    return t_.prompts.reduce(function (n, p) { return n + promptImages(t_, p); }, 0);
+  }
+  function imagesText(n) { return n === 1 ? t("imagesOne") : t("images", { n: n }); }
+
+  // ── header ──────────────────────────────────────────────────────────
+  function applyLang() {
+    document.documentElement.lang = lang;
+    Array.prototype.forEach.call(document.querySelectorAll("[data-t]"), function (el) {
+      el.textContent = t(el.getAttribute("data-t"));
+    });
+    $("openBtn").textContent = t("open") + " ▾";
+    $("langBtn").textContent = t("lang");
+    $("settingsBtn").textContent = t("settings");
+    $("output").title = t("outputHint");
+    $("modalOk").textContent = t("add");
+  }
+  function updateTitle() {
+    var label = fileName ? "jobs/" + fileName + ".json" : (sourceLabel || t("untitled"));
+    var el = $("fileLabel");
+    el.textContent = label + " ";
+    if (dirty) el.append(h("b", { text: "•" }));
+    document.title = "jenair — " + label + (dirty ? " •" : "");
+    $("output").placeholder = fileName || "ui";
+    if ($("output").value !== project.output) $("output").value = project.output || "";
+  }
+
+  function renderAll() {
+    applyLang();
+    updateTitle();
+    renderTabs();
+    renderEditor();
+    syncSideInputs();
+    renderSide();
+    renderCheck();
+    updateCounts();
+  }
+
+  // ── tabs ────────────────────────────────────────────────────────────
+  var dragFrom = -1;
+  function renderTabs() {
+    var bar = $("tabbar");
+    bar.textContent = "";
+    var names = {};
+    project.tabs.forEach(function (t_) { names[t_.name] = (names[t_.name] || 0) + 1; });
+    project.tabs.forEach(function (t_, i) {
+      var bad = !validTabName(t_.name) || names[t_.name] > 1;
+      var label = h("span", { class: "tname" + (bad ? " bad" : ""), text: t_.name,
+                              title: bad ? t("badTabName") : t("renameHint") });
+      label.addEventListener("dblclick", function (e) { e.stopPropagation(); renameTab(i, label); });
+      var el = h("div", {
+        class: "tab" + (i === active ? " on" : "") + (t_.skip ? " off" : ""), draggable: "true",
+        onclick: function () { if (active !== i) { active = i; renderTabs(); renderEditor(); } },
+        ondragstart: function (e) { dragFrom = i; e.dataTransfer.effectAllowed = "move";
+                                    e.dataTransfer.setData("text/plain", String(i)); },
+        ondragover: function (e) { e.preventDefault(); el.classList.add("dragover"); },
+        ondragleave: function () { el.classList.remove("dragover"); },
+        ondrop: function (e) { e.preventDefault(); moveTab(dragFrom, i); }
+      },
+        h("input", { type: "checkbox", title: t("tabUse"), checked: !t_.skip,
+                     onclick: function (e) { e.stopPropagation(); },
+                     onchange: function (e) { t_.skip = !e.target.checked; touch(true); } }),
+        label,
+        h("span", { class: "count", text: tabImages(t_), title: imagesText(tabImages(t_)) }),
+        h("button", { class: "icon", text: "⧉", title: t("duplicate"),
+                      onclick: function (e) { e.stopPropagation(); duplicateTab(i); } }),
+        h("button", { class: "icon", text: "×", title: t("closeTab"),
+                      onclick: function (e) { e.stopPropagation(); closeTab(i); } }));
+      bar.append(el);
+    });
+    bar.append(h("button", { class: "addtab", text: "+", title: t("addTab"), onclick: addTab }));
+  }
+  function uniqueName(base) {
+    var used = {};
+    project.tabs.forEach(function (t_) { used[t_.name] = true; });
+    if (!used[base]) return base;
+    for (var n = 2; ; n++) if (!used[base + n]) return base + n;
+  }
+  function addTab() {
+    project.tabs.push(blankTab(uniqueName("batch" + (project.tabs.length + 1))));
+    active = project.tabs.length - 1;
+    touch(true);
+    renderEditor();
+  }
+  function duplicateTab(i) {
+    var copy = clone(project.tabs[i]);
+    copy.name = uniqueName(copy.name + t("copySuffix"));
+    prepare(copy);
+    project.tabs.splice(i + 1, 0, copy);
+    active = i + 1;
+    touch(true);
+    renderEditor();
+  }
+  function closeTab(i) {
+    var t_ = project.tabs[i];
+    if (!confirm(t("confirmCloseTab", { name: t_.name, n: t_.prompts.length }))) return;
+    project.tabs.splice(i, 1);
+    if (!project.tabs.length) project.tabs.push(blankTab("batch1"));
+    active = Math.min(active, project.tabs.length - 1);
+    touch(true);
+    renderEditor();
+  }
+  function moveTab(from, to) {
+    if (from < 0 || from === to) { renderTabs(); return; }
+    var moved = project.tabs.splice(from, 1)[0];
+    project.tabs.splice(to, 0, moved);
+    active = to;
+    touch(true);
+    renderEditor();
+  }
+  function renameTab(i, label) {
+    var t_ = project.tabs[i];
+    var input = h("input", { class: "rename", value: t_.name });
+    var done = false;
+    function commit(keep) {
+      if (done) return;
+      done = true;
+      var value = input.value.trim();
+      if (keep && value && value !== t_.name) { t_.name = value; touch(true); }
+      else renderTabs();
+    }
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") commit(true);
+      if (e.key === "Escape") commit(false);
+    });
+    input.addEventListener("blur", function () { commit(true); });
+    input.addEventListener("click", function (e) { e.stopPropagation(); });
+    label.replaceWith(input);
+    input.focus();
+    input.select();
+  }
+
+  // ── editor ──────────────────────────────────────────────────────────
+  function grouped(list, current, fits) {
+    var order = ["built-in", "models folder", "ComfyUI", "storage"];
+    var groups = {};
+    list.forEach(function (item) {
+      if (!fits(item) && item.name !== current) return;
+      (groups[item.source] = groups[item.source] || []).push(item);
+    });
+    return order.filter(function (s) { return groups[s]; }).map(function (source) {
+      var g = h("optgroup", { label: t("src_" + source.replace(/ /g, "_").replace("-", "_")) });
+      groups[source].forEach(function (item) {
+        g.append(h("option", { value: item.name, title: item.note || item.trigger || "",
+                               text: item.name + (item.engine && item.engine !== item.name ? "  · " + item.engine : "") }));
+      });
+      return g;
+    });
+  }
+  function parseLoose(text) {
+    var v = text.trim();
+    if (v.charAt(0) === "[" || v.charAt(0) === "{") {
+      try { return JSON.parse(v); } catch (e) { return v; }
+    }
+    return v;
+  }
+
+  function modelField(t_, engs) {
+    var s = t_.settings;
+    var value = s.model;
+    var isText = typeof value === "string";
+    var known = isText && CHOICES.models.some(function (m) { return m.name === value; });
+    var select = h("select", { class: "model" },
+      h("option", { value: "", text: t("chooseModel") }),
+      grouped(CHOICES.models, value, function () { return true; }),
+      h("option", { value: "__custom", text: t("customModel") }));
+    select.value = value === "" ? "" : (known ? value : "__custom");
+    var custom = h("input", {
+      class: "custom", spellcheck: "false", placeholder: t("customModelHint"),
+      value: isText ? (known ? "" : value) : JSON.stringify(value),
+      hidden: value === "" || known
+    });
+    select.addEventListener("change", function () {
+      if (select.value === "__custom") {
+        custom.hidden = false;
+        s.model = parseLoose(custom.value);
+        custom.focus();
+      } else {
+        s.model = select.value;
+      }
+      touch(true);
+      if (select.value !== "__custom") renderEditor();
+    });
+    custom.addEventListener("input", function () { s.model = parseLoose(custom.value); touch(true); });
+    custom.addEventListener("change", function () { renderEditor(); });
+    var names = engs.map(function (e) { return e ? e.name : "?"; });
+    var uniq = names.filter(function (n, i) { return names.indexOf(n) === i; });
+    var tag = !uniq.length ? "" : (uniq.indexOf("?") >= 0 && uniq.length === 1)
+      ? t("engineUnknown") : (uniq.length > 1 ? t("engines") : t("engine")) + ": " + uniq.join(", ");
+    var one = oneEngine(engs);
+    var browse = h("button", { text: t("browse"), onclick: function () {
+      openBrowser("model", t_, afterImport(t_, function (name) { s.model = name; t_.noteFor = "model"; }));
+    } });
+    return h("div", {}, h("div", { class: "line" }, select, custom, browse,
+             tag && h("span", { class: "tag", text: tag, title: one ? one.notes : "" })),
+             t_.note && t_.noteFor === "model" && h("div", { class: "hint", text: t_.note }));
+  }
+
+  function loraField(t_, engs) {
+    var s = t_.settings;
+    var names = engs.filter(Boolean).map(function (e) { return e.name; });
+    var wrap = h("div", { class: "loras" });
+    s.loras.forEach(function (row, i) {
+      var removeBtn = h("button", { class: "icon", text: "×", title: t("remove"),
+        onclick: function () { s.loras.splice(i, 1); touch(true); renderEditor(); } });
+      if (row.raw !== undefined) {
+        wrap.append(h("div", { class: "lora" }, h("code", { text: JSON.stringify(row.raw) }), removeBtn));
+        return;
+      }
+      var info = CHOICES.loras.filter(function (l) { return l.name === row.name; })[0];
+      var fits = function (l) { return !l.engine || !names.length || names.indexOf(l.engine) >= 0; };
+      var bad = !!(info && !fits(info));
+      var select = h("select", { class: bad ? "bad" : "", title: bad ? t("wrongEngine", { engine: info.engine }) : "" },
+        h("option", { value: "", text: t("chooseLora") }),
+        grouped(CHOICES.loras, row.name, fits),
+        h("option", { value: "__custom", text: t("customLora") }));
+      select.value = !row.name ? "" : (info ? row.name : "__custom");
+      var custom = h("input", { class: "custom", spellcheck: "false", value: info ? "" : row.name,
+                                placeholder: "my-lora, hf://…, https://…", hidden: !row.name || !!info });
+      select.addEventListener("change", function () {
+        if (select.value === "__custom") { custom.hidden = false; row.name = custom.value.trim(); custom.focus(); }
+        else row.name = select.value;
+        touch(true);
+        if (select.value !== "__custom") renderEditor();
+      });
+      custom.addEventListener("input", function () { row.name = custom.value.trim(); touch(); });
+      custom.addEventListener("change", function () { renderEditor(); });
+      var scale = h("input", { class: "scale", type: "number", step: "0.05", placeholder: "1.0",
+                               title: t("scale"), value: row.scale == null ? "" : row.scale });
+      scale.addEventListener("input", function () {
+        row.scale = scale.value === "" ? null : Number(scale.value);
+        touch();
+      });
+      var use = h("input", { type: "checkbox", title: t("useTrigger"), checked: row.trigger !== "" });
+      var trigger = h("input", {
+        class: "trigger", spellcheck: "false", disabled: row.trigger === "",
+        value: row.trigger || "", title: t("trigger"),
+        placeholder: info && info.trigger ? info.trigger : t("noTriggerKnown")
+      });
+      use.addEventListener("change", function () {
+        row.trigger = use.checked ? (trigger.value || null) : "";
+        trigger.disabled = !use.checked;
+        touch();
+      });
+      trigger.addEventListener("input", function () { row.trigger = trigger.value || null; touch(); });
+      var browse = h("button", { text: t("browse"), onclick: function () {
+        openBrowser("loras", t_, afterImport(t_, function (name) { row.name = name; t_.noteFor = "lora"; }));
+      } });
+      wrap.append(h("div", { class: "lora" }, select, custom, browse,
+        h("span", { class: "muted", text: t("scale") }), scale,
+        h("label", { class: "muted" }, use, t("trigger")), trigger, removeBtn));
+    });
+    wrap.append(h("div", { class: "line" }, h("button", { text: t("addLora"), onclick: function () {
+      s.loras.push({ name: "", scale: null, trigger: null, extra: {} });
+      touch(true);
+      renderEditor();
+    } }), h("button", { text: t("browseLora"), onclick: function () {
+      openBrowser("loras", t_, afterImport(t_, function (name) {
+        s.loras.push({ name: name, scale: null, trigger: null, extra: {} });
+        t_.noteFor = "lora";
+      }));
+    } })));
+    if (t_.note && t_.noteFor === "lora") wrap.append(h("div", { class: "hint", text: t_.note }));
+    return wrap;
+  }
+
+  function sizeField(t_, eng) {
+    var size = t_.settings.size;
+    var line = h("div", { class: "line" });
+    var name = "size" + t_.id;
+    var aspect = h("select", {},
+      Object.keys(META.aspects).map(function (k) {
+        var wh = META.aspects[k];
+        return h("option", { value: k, text: k + "  (" + wh[0] + "×" + wh[1] + ")" });
+      }));
+    if (size.aspect && !META.aspects[size.aspect]) aspect.append(h("option", { value: size.aspect, text: size.aspect }));
+    aspect.value = size.aspect || "2:3";
+    var w = h("input", { class: "num", type: "number", step: eng ? eng.multiple : 8, placeholder: eng ? eng.width : "W",
+                         value: size.width });
+    var hh = h("input", { class: "num", type: "number", step: eng ? eng.multiple : 8, placeholder: eng ? eng.height : "H",
+                          value: size.height });
+    function radio(mode, label) {
+      var r = h("input", { type: "radio", name: name, checked: size.mode === mode });
+      r.addEventListener("change", function () {
+        size.mode = mode;
+        if (mode === "aspect" && !size.aspect) size.aspect = aspect.value;
+        sync();
+        touch();
+      });
+      return h("label", {}, r, label);
+    }
+    function sync() {
+      aspect.disabled = size.mode !== "aspect";
+      w.disabled = hh.disabled = size.mode !== "custom";
+    }
+    aspect.addEventListener("change", function () { size.aspect = aspect.value; touch(); });
+    w.addEventListener("input", function () { size.width = w.value === "" ? "" : Number(w.value); touch(); });
+    hh.addEventListener("input", function () { size.height = hh.value === "" ? "" : Number(hh.value); touch(); });
+    sync();
+    line.append(radio("default", t("sizeDefault") + (eng ? " (" + eng.width + "×" + eng.height + ")" : "")),
+                radio("aspect", t("sizeAspect")), aspect, radio("custom", t("sizeCustom")), w, "×", hh);
+    return line;
+  }
+
+  function seedField(t_) {
+    var s = t_.settings;
+    var input = h("input", { class: "mid", spellcheck: "false", placeholder: "0",
+                             value: s.seeds.join(", "), title: t("seedsHint") });
+    function parse() {
+      var parts = input.value.split(/[\s,]+/).filter(Boolean);
+      var nums = parts.map(Number);
+      var ok = nums.every(function (n) { return Number.isInteger(n); });
+      input.classList.toggle("bad", !ok);
+      input.title = ok ? t("seedsHint") : t("seedsBad");
+      if (ok) { s.seeds = nums; touch(true); }
+    }
+    input.addEventListener("input", parse);
+    var random = h("button", { text: t("random"), onclick: function () {
+      s.seeds.push(Math.floor(Math.random() * 2147483647));
+      input.value = s.seeds.join(", ");
+      touch(true);
+    } });
+    return h("div", { class: "line" }, input, random);
+  }
+
+  function samplingField(t_, eng, engs, negArea) {
+    var s = t_.settings;
+    var fixedCfg = engs.length > 0 && engs.every(function (e) { return e && e.cfg_fixed; });
+    var steps = h("input", { class: "num", type: "number", min: "1", step: "1",
+                             placeholder: eng ? eng.steps : "", value: s.steps == null ? "" : s.steps });
+    steps.addEventListener("input", function () { s.steps = steps.value === "" ? null : Number(steps.value); touch(); });
+    var cfg = h("input", { class: "num", type: "number", step: "0.5", min: "0",
+                           placeholder: eng ? eng.cfg : "", value: s.cfg == null ? "" : s.cfg,
+                           disabled: fixedCfg,
+                           title: fixedCfg ? t("cfgFixed", { engine: engs[0].name }) : "" });
+    cfg.addEventListener("input", function () {
+      s.cfg = cfg.value === "" ? null : Number(cfg.value);
+      touch();
+      lockNegative(t_, engs, negArea);
+    });
+    var sampler = h("input", { class: "mid", list: "dlSamplers", spellcheck: "false",
+                               placeholder: eng ? eng.sampler : "", value: s.sampler });
+    sampler.addEventListener("input", function () { s.sampler = sampler.value.trim(); touch(); });
+    var scheduler = h("input", { class: "mid", list: "dlSchedulers", spellcheck: "false",
+                                 placeholder: eng ? eng.scheduler : "", value: s.scheduler });
+    scheduler.addEventListener("input", function () { s.scheduler = scheduler.value.trim(); touch(); });
+    return h("div", { class: "line" },
+      h("span", { class: "muted", text: t("steps") }), steps,
+      h("span", { class: "muted", text: t("cfg") }), cfg,
+      h("span", { class: "muted", text: t("sampler") }), sampler,
+      h("span", { class: "muted", text: t("scheduler") }), scheduler);
+  }
+
+  function lockNegative(t_, engs, area) {
+    var cfg = t_.settings.cfg;
+    var reason = "";
+    var off = engs.length > 0 && engs.every(function (e) {
+      if (!e) return false;
+      if (!e.uses_negative) return true;
+      return e.negative_needs_cfg && !(cfg != null && cfg > 1);
+    });
+    if (off) {
+      var first = engs[0];
+      reason = first.negative_needs_cfg ? t("negKrea") : t("negOff", { engine: first.name });
+    }
+    area.disabled = off;
+    area.title = reason;
+  }
+
+  function jsonBox(value, onValue, hint) {
+    var area = h("textarea", { spellcheck: "false", placeholder: hint,
+                               value: Object.keys(value).length ? JSON.stringify(value, null, 1) : "" });
+    area.addEventListener("input", function () {
+      var text = area.value.trim();
+      var parsed = null;
+      try { parsed = text ? JSON.parse(text) : {}; } catch (e) { parsed = null; }
+      var ok = parsed !== null && typeof parsed === "object" && !Array.isArray(parsed);
+      area.classList.toggle("bad", !ok);
+      area.title = ok ? "" : t("jsonBad");
+      onValue(ok ? parsed : null);
+    });
+    return area;
+  }
+
+  function renderEditor() {
+    editorStale = false;
+    var ed = $("editor");
+    ed.textContent = "";
+    var t_ = tab();
+    if (!t_ || !META) return;
+    var s = t_.settings;
+    var engs = tabEngines(t_);
+    var eng = oneEngine(engs);
+    var negative = h("textarea", { id: "negative", rows: 1, spellcheck: "false", value: s.negative,
+                                   placeholder: eng && eng.default_negative ? eng.default_negative : "" });
+    negative.addEventListener("input", function () { s.negative = negative.value; autosize(negative); touch(); });
+    lockNegative(t_, engs, negative);
+    var extraCount = Object.keys(t_.extra).length;
+    var extra = h("details", { class: "extra", open: extraCount ? true : null },
+      h("summary", { text: t("other") + (extraCount ? " (" + extraCount + ")" : "") }),
+      h("div", { class: "hint", text: t("otherHint") }),
+      jsonBox(t_.extra, function (v) {
+        t_.badExtra = v === null;
+        if (v !== null) t_.extra = v;
+        touch();
+      }, "{}"));
+    ed.append(h("div", { class: "grid" },
+      h("div", { class: "lab", text: t("model") }), modelField(t_, engs),
+      h("div", { class: "lab", text: t("loras") }), loraField(t_, engs),
+      h("div", { class: "lab", text: t("size") }), sizeField(t_, eng),
+      h("div", { class: "lab", text: t("seeds") }), seedField(t_),
+      h("div", { class: "lab", text: t("sampling") }), samplingField(t_, eng, engs, negative),
+      h("div", { class: "lab", text: t("negative") }), negative,
+      h("div", { class: "lab" }), extra));
+    var count = h("span", { class: "tag", id: "tabCount", text: imagesText(tabImages(t_)) });
+    ed.append(h("div", { class: "prompts-head" },
+      h("h3", { text: t("prompts") + " (" + t_.prompts.length + ")" }), count,
+      h("span", { class: "spacer" }),
+      h("button", { text: t("add"), onclick: function () { addPrompt(t_); } }),
+      h("button", { text: t("pasteMany"), onclick: function () { pasteMany(t_); } })));
+    if (!t_.prompts.length) ed.append(h("div", { class: "empty", text: t("noPrompts") }));
+    t_.prompts.forEach(function (p, i) { ed.append(promptRow(t_, p, i)); });
+    Array.prototype.forEach.call(ed.querySelectorAll("textarea.text, #negative"), autosize);
+  }
+
+  function nextPromptName(t_) {
+    var used = {};
+    t_.prompts.forEach(function (p) { used[p.name] = true; });
+    for (var n = 1; ; n++) if (!used["p" + n]) return "p" + n;
+  }
+  function addPrompt(t_, text) {
+    var p = blankPrompt(nextPromptName(t_), text);
+    t_.prompts.push(p);
+    touch(true);
+    renderEditor();
+    var area = document.querySelector('[data-pid="' + p.id + '"] textarea.text');
+    if (area) area.focus();
+  }
+
+  function promptRow(t_, p, i) {
+    var move = function (d) {
+      var j = i + d;
+      if (j < 0 || j >= t_.prompts.length) return;
+      t_.prompts.splice(j, 0, t_.prompts.splice(i, 1)[0]);
+      touch(true);
+      renderEditor();
+    };
+    var remove = h("button", { class: "icon", text: "×", title: t("remove"), onclick: function () {
+      t_.prompts.splice(i, 1);
+      touch(true);
+      renderEditor();
+    } });
+    if (p.raw !== undefined) {
+      return h("div", { class: "prompt", "data-pid": p.id }, h("span"), h("code", { text: JSON.stringify(p.raw) }),
+               h("span"), h("div", { class: "acts" }, remove));
+    }
+    var row = h("div", { class: "prompt" + (p.skip ? " off" : ""), "data-pid": p.id });
+    var use = h("input", { type: "checkbox", title: t("use"), checked: !p.skip });
+    use.addEventListener("change", function () { p.skip = !use.checked; row.classList.toggle("off", p.skip); touch(true); });
+    var name = h("input", { class: "pname", spellcheck: "false", value: p.name, title: t("name"), placeholder: t("name") });
+    name.addEventListener("input", function () {
+      p.name = name.value.trim();
+      var dup = t_.prompts.filter(function (q) { return q.name === p.name; }).length > 1;
+      name.classList.toggle("bad", !p.name || dup || /(^|\/)\.\.(\/|$)|^\//.test(p.name));
+      touch();
+    });
+    var text = h("textarea", { class: "text", rows: 1, spellcheck: "false", value: p.prompt, placeholder: t("promptHint") });
+    text.addEventListener("input", function () { p.prompt = text.value; autosize(text); touch(); });
+    var hasOver = Object.keys(p.overrides || {}).length > 0;
+    var overBtn = h("button", { class: "icon" + (hasOver ? " has" : ""), text: "⋮", title: t("overrides"),
+                                onclick: function () { p.open = !p.open; renderEditor(); } });
+    row.append(use, name, text, h("div", { class: "acts" },
+      h("button", { class: "icon", text: "↑", title: t("up"), disabled: i === 0, onclick: function () { move(-1); } }),
+      h("button", { class: "icon", text: "↓", title: t("down"), disabled: i === t_.prompts.length - 1,
+                    onclick: function () { move(1); } }),
+      h("button", { class: "icon", text: "⧉", title: t("dupPrompt"), onclick: function () {
+        var copy = clone(p);
+        copy.id = uid++;
+        copy.name = nextPromptName(t_);
+        t_.prompts.splice(i + 1, 0, copy);
+        touch(true);
+        renderEditor();
+      } }),
+      overBtn, remove));
+    if (p.open) {
+      row.append(h("div", { class: "over" },
+        h("div", { class: "hint", text: t("overridesHint") }),
+        jsonBox(p.overrides || {}, function (v) {
+          p.badOverrides = v === null;
+          if (v !== null) {
+            p.overrides = v;
+            overBtn.classList.toggle("has", Object.keys(v).length > 0);
+          }
+          touch(true);
+        }, "{}")));
+    }
+    return row;
+  }
+
+  function pasteMany(t_) {
+    var modal = $("modal");
+    $("modalTitle").textContent = t("pasteTitle");
+    $("modalHint").textContent = t("pasteHint");
+    $("modalText").value = "";
+    modal.hidden = false;
+    $("modalText").focus();
+    $("modalOk").onclick = function () {
+      var blocks = $("modalText").value.split(/\n\s*\n/).map(function (b) { return b.trim(); })
+        .filter(Boolean);
+      modal.hidden = true;
+      if (!blocks.length) return;
+      if (t_.prompts.length === 1 && !t_.prompts[0].prompt.trim() &&
+          !Object.keys(t_.prompts[0].overrides).length) t_.prompts = [];
+      blocks.forEach(function (b) { t_.prompts.push(blankPrompt(nextPromptName(t_), b)); });
+      touch(true);
+      renderEditor();
+    };
+  }
+
+  function updateCounts() {
+    var el = $("tabCount");
+    if (el && tab()) el.textContent = imagesText(tabImages(tab()));
+    var all = project.tabs.length;
+    var used = project.tabs.filter(function (t_) { return !t_.skip; }).length;
+    var n = project.tabs.reduce(function (sum, t_) { return sum + tabImages(t_); }, 0);
+    $("summary").textContent = t("tabsSummary", { n: n, tabs: used, all: all });
+  }
+
+  // ── choices ─────────────────────────────────────────────────────────
+  function loadChoices(refresh) {
+    var want = target();
+    return api("GET", "/api/choices?target=" + want + (refresh ? "&refresh=1" : "")).then(function (data) {
+      CHOICES = data;
+      choicesFor = want;
+      var focus = document.activeElement;
+      if (focus && $("editor").contains(focus) && /INPUT|TEXTAREA/.test(focus.tagName)) editorStale = true;
+      else renderEditor();
+    }).catch(function (e) { toast(e.message); });
+  }
+
+  // ── files ───────────────────────────────────────────────────────────
+  function exportNow() {
+    var problems = [];
+    project.tabs.forEach(function (t_) {
+      if (t_.badExtra) problems.push(t_.name + ": " + t("other") + " — " + t("jsonBad"));
+      t_.prompts.forEach(function (p) {
+        if (p.badOverrides) problems.push(t_.name + " / " + p.name + ": " + t("overrides") + " — " + t("jsonBad"));
+      });
+    });
+    if (problems.length) {
+      alert(t("fixJson") + "\n" + problems.join("\n"));
+      return null;
+    }
+    return C.exportProject(project);
+  }
+  function saveFile(asNew) {
+    var data = exportNow();
+    if (!data) return;
+    var name = fileName;
+    if (asNew || !name) {
+      name = prompt(t("saveName"), name || project.output || (sourceLabel || "my-job").replace(/^.*\//, "").replace(/\.json$/, ""));
+      if (!name) return;
+      name = name.trim().replace(/\.json$/, "");
+    }
+    var replace = !asNew && name === fileName;
+    var send = function (overwrite) {
+      return api("POST", "/api/file", { name: name, project: data, overwrite: overwrite });
+    };
+    send(replace).catch(function (e) {
+      if (e.status === 409 && confirm(t("confirmReplace", { name: name }))) return send(true);
+      throw e;
+    }).then(function (result) {
+      if (!result) return;
+      fileName = result.name;
+      sourceLabel = "";
+      dirty = false;
+      updateTitle();
+      saveDraft();
+      toast(t("savedTo", { path: result.path }));
+    }).catch(function (e) { alert(e.message); });
+  }
+  function toggleOpen() {
+    var list = $("openList");
+    if (!list.hidden) { list.hidden = true; return; }
+    api("GET", "/api/files").then(function (data) {
+      list.textContent = "";
+      var section = function (title, paths) {
+        list.append(h("h4", { text: title }));
+        if (!paths.length) list.append(h("div", { class: "hint", style: "padding:0 12px", text: t("openNone") }));
+        paths.forEach(function (path) {
+          list.append(h("button", { text: path, onclick: function () { list.hidden = true; openFile(path); } }));
+        });
+      };
+      section(t("openJobs"), data.jobs);
+      section(t("openExamples"), data.examples);
+      list.hidden = false;
+    }).catch(function (e) { alert(e.message); });
+  }
+  function openFile(path) {
+    if (dirty && !confirm(t("confirmDiscard"))) return;
+    api("GET", "/api/file?path=" + encodeURIComponent(path)).then(function (data) {
+      var mine = path.indexOf("jobs/") === 0 && path.split("/").length === 2;
+      load(data.project, mine ? data.name : "", mine ? "" : path);
+    }).catch(function (e) { alert(e.message); });
+  }
+  function importFile(file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      try { load(JSON.parse(String(reader.result)), "", file.name); }
+      catch (e) { alert(file.name + ": " + e.message); }
+    };
+    reader.readAsText(file);
+  }
+  function exportFile() {
+    var data = exportNow();
+    if (!data) return;
+    var blob = new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var base = fileName || project.output || (sourceLabel || "jenair").replace(/^.*\//, "").replace(/\.json$/, "");
+    var a = h("a", { href: url, download: base + ".json" });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+  }
+
+  // ── side: connect ───────────────────────────────────────────────────
+  function syncSideInputs() {
+    Array.prototype.forEach.call(document.querySelectorAll('input[name="target"]'), function (r) {
+      r.checked = r.value === target();
+    });
+    if (!$("comfyUrl").value) $("comfyUrl").value = META.settings.comfy_url;
+  }
+  function connState() {
+    if (!STATUS) return { state: "idle", message: "", detail: {} };
+    if (STATUS.target && STATUS.target !== target()) return { state: "idle", message: "", detail: {} };
+    return STATUS.connection;
+  }
+  function connect() {
+    var body = { target: target() };
+    if (body.target === "local") {
+      body.comfy_url = $("comfyUrl").value.trim();
+    } else {
+      body.max_hours = Number($("maxHours").value) || 3;
+      body.secure = $("secure").checked;
+      if (!confirm(t("confirmRent", { idle: META.settings.idle_minutes, hours: body.max_hours }))) return;
+    }
+    api("POST", "/api/connect", body).then(poll).catch(function (e) { alert(e.message); });
+  }
+  function disconnect() {
+    if (STATUS && STATUS.target === "runpod" && !confirm(t("confirmStop"))) return;
+    api("POST", "/api/disconnect", {}).then(poll).catch(function (e) { alert(e.message); });
+  }
+
+  function podDetail(st) {
+    var pod = st.pod;
+    var conn = st.connection;
+    var out = [];
+    var now = Date.now() / 1000 + skew;
+    var phase = pod.phase;
+    if (phase && phase !== "ready" && phase !== "stopping") {
+      if (podClock.phase !== phase || podClock.elapsed !== pod.elapsed) {
+        podClock = { phase: phase, elapsed: pod.elapsed, at: Date.now() };
+      }
+      var elapsed = pod.elapsed + (Date.now() - podClock.at) / 1000;
+      var typical = pod.typical_seconds || 300;
+      var index = ["renting", "pulling image", "starting ComfyUI", "ready"].indexOf(phase);
+      var pct = phase === "renting" ? 4 : Math.min(96, 8 + 88 * elapsed / typical);
+      out.push(h("div", { class: "phases" }, ["renting", "pulling image", "starting ComfyUI", "ready"].map(function (p, i) {
+        return h("span", { class: i < index ? "past" : (i === index ? "now" : ""), text: (i ? "→ " : "") + t("phase_" + p) });
+      })));
+      out.push(h("div", { class: "bar" }, h("i", { style: "width:" + pct.toFixed(0) + "%" })));
+      out.push(h("div", { class: "row2" },
+        h("span", { class: "big", text: clock(phase === "renting" ? 0 : elapsed) }),
+        h("span", { class: "muted", text: t("typical", { m: Math.round(typical / 60) }) }),
+        pod.gpu && h("span", { class: "tag", text: pod.gpu })));
+      if (pod.cloud === "secure") out.push(h("div", { class: "hint", text: t("secureAttempt", { n: pod.attempt || 1 }) }));
+    }
+    if (phase === "stopping") out.push(h("div", { class: "muted", text: t("phase_stopping") + "…" }));
+    if (conn.state === "ready" && st.target === "runpod") {
+      var kv = h("div", { class: "kv" });
+      var put = function (k, v, big) { kv.append(h("span", { text: k }), h("span", { class: big ? "big" : "", text: v })); };
+      put(t("gpu"), pod.gpu || "—");
+      if (pod.idle_deadline) put(t("autoStop"), clock(pod.idle_deadline - now), true);
+      if (pod.hard_deadline) put(t("hardLimit"), clock(pod.hard_deadline - now));
+      put(t("balance"), money(pod.balance));
+      put(t("perHour"), money(pod.spend_per_hour));
+      out.push(kv);
+    } else if (st.target === "runpod" && pod.balance != null && conn.state !== "connecting") {
+      out.push(h("div", { class: "muted", text: t("balance") + " " + money(pod.balance) }));
+    }
+    return out;
+  }
+
+  function localDetail(conn) {
+    if (conn.state !== "ready") return [];
+    var d = conn.detail || {};
+    var kv = h("div", { class: "kv" });
+    var put = function (k, v) { kv.append(h("span", { text: k }), h("span", { text: v || "—" })); };
+    put(t("version"), d.version);
+    put(t("device"), d.device);
+    put(t("sameComputer"), d.same_computer ? t("sameYes") : t("sameNo"));
+    return [kv];
+  }
+
+  // ── side: render ────────────────────────────────────────────────────
+  function renderSide() {
+    var tg = target();
+    var runpod = tg === "runpod";
+    $("localOpts").hidden = runpod;
+    $("podOpts").hidden = !runpod;
+    var noKey = runpod && META && !META.settings.runpod_key;
+    $("noKey").hidden = !noKey;
+    if ($("noKey").dataset.lang !== lang) {
+      $("noKey").dataset.lang = lang;
+      $("noKey").textContent = t("noKey") + " ";
+      $("noKey").append(h("button", { text: t("noKeyBtn"), onclick: openSettings }));
+    }
+    var conn = connState();
+    var busy = !!(STATUS && STATUS.busy);
+    $("dot").className = "dot " + conn.state;
+    $("connMsg").textContent = STATUS === false ? t("serverDown")
+      : (conn.state === "ready" ? t("st_ready") : (conn.message || t("st_" + conn.state)));
+    $("connectBtn").disabled = busy || noKey || conn.state === "ready" || conn.state === "connecting";
+    var showStop = STATUS && STATUS.target === tg && (conn.state === "ready" || conn.state === "connecting" ||
+                                                      (runpod && STATUS.pod.phase && STATUS.pod.phase !== "stopping"));
+    $("disconnectBtn").hidden = !showStop;
+    $("disconnectBtn").textContent = runpod ? t("stopPod") : t("disconnect");
+    var detail = $("connDetail");
+    detail.textContent = "";
+    if (STATUS && STATUS.target === tg) add(detail, runpod ? podDetail(STATUS) : localDetail(conn));
+    var rendering = !!(STATUS && STATUS.render.state === "running");
+    $("renderBtn").disabled = busy || noKey;
+    $("renderBtn").textContent = rendering ? t("rendering") : t("render");
+    $("cancelBtn").hidden = !busy;
+    renderProgress();
+    renderThumbs();
+    var log = $("log");
+    var lines = STATUS && STATUS.log ? STATUS.log.join("\n") : "";
+    if (log.textContent !== lines) {
+      var atEnd = log.scrollTop + log.clientHeight >= log.scrollHeight - 8;
+      log.textContent = lines;
+      if (atEnd) log.scrollTop = log.scrollHeight;
+    }
+  }
+
+  function renderProgress() {
+    var box = $("progress");
+    box.textContent = "";
+    if (!STATUS) return;
+    var r = STATUS.render, f = STATUS.files;
+    if (r.state === "idle") return;
+    var moving = (f.items || []).filter(function (i) {
+      return i.how !== "have" && i.how !== "local";
+    });
+    if (moving.length && f.state !== "idle") {
+      var pending = moving.filter(function (i) { return i.status !== "done"; });
+      var pct = f.total ? 100 * f.bytes / f.total
+        : 100 * (moving.length - pending.length) / moving.length;
+      box.append(h("div", { class: "row2" }, h("b", { text: t("filesProgress") }),
+        h("span", { class: "muted", text: (f.total ? bytes(f.bytes) + " / " + bytes(f.total) : "") })));
+      box.append(h("div", { class: "bar thin" }, h("i", { style: "width:" + pct.toFixed(0) + "%" })));
+      if (f.state === "working") {
+        box.append(h("table", { class: "ftable" }, pending.slice(0, 8).map(function (i) {
+          var p = i.total ? " " + Math.floor(100 * i.bytes / i.total) + "%" : "";
+          return h("tr", {}, h("td", { class: "how", text: t("how_" + i.how) + p }), h("td", { text: i.dest }));
+        })));
+      }
+    }
+    var finished = r.done + r.failed;
+    var head = r.state === "running" ? finished + " / " + r.total
+      : r.state === "cancelled" ? t("cancelled") + " · " + t("done", { d: r.done, f: r.failed })
+      : r.state === "error" ? t("renderError", { m: r.message })
+      : t("done", { d: r.done, f: r.failed });
+    box.append(h("div", { class: "row2" }, h("b", { class: r.state === "error" ? "bad" : "", text: head }),
+      r.state === "running" && r.eta_seconds != null && h("span", { class: "muted", text: t("eta", { t: clock(r.eta_seconds) }) })));
+    box.append(h("div", { class: "bar" }, h("i", { style: "width:" + (r.total ? 100 * finished / r.total : 0).toFixed(0) + "%" })));
+    if (r.current && r.state === "running") {
+      var c = r.current;
+      box.append(h("div", { class: "muted", text: (c.steps ? t("step", { s: c.step, n: c.steps }) + " · " : "") + c.label }));
+      box.append(h("div", { class: "bar thin" }, h("i", { style: "width:" + (c.steps ? 100 * c.step / c.steps : 0).toFixed(0) + "%" })));
+    }
+    var failed = r.results.filter(function (x) { return !x.ok; });
+    if (failed.length) {
+      box.append(h("b", { class: "bad", text: t("failures") }));
+      box.append(h("ul", { class: "list-s errors" }, failed.map(function (x) {
+        return h("li", { text: (x.batch ? x.batch + "/" : "") + x.model + "/" + x.name + " · " + x.seed + ": " + x.error });
+      })));
+    }
+  }
+
+  function renderThumbs() {
+    var box = $("thumbs");
+    var results = STATUS && STATUS.render ? STATUS.render.results.filter(function (x) { return x.ok; }) : [];
+    var want = results.slice(-48).reverse();
+    var key = want.map(function (x) { return x.path + (thumbs[x.path] ? "+" : ""); }).join("|");
+    if (box.dataset.key === key) return;
+    box.dataset.key = key;
+    box.textContent = "";
+    want.forEach(function (x) {
+      var url = thumbs[x.path];
+      if (url === undefined) {
+        thumbs[x.path] = null;
+        api("GET", "/api/image?path=" + encodeURIComponent(x.path)).then(function (blob) {
+          thumbs[x.path] = URL.createObjectURL(blob);
+          renderThumbs();
+        }).catch(function () { delete thumbs[x.path]; });
+      }
+      var label = (x.batch ? x.batch + "/" : "") + x.model + "/" + x.name + " · seed " + x.seed +
+        (x.seconds ? " · " + x.seconds + "s" : "");
+      box.append(url ? h("a", { href: url, target: "_blank", rel: "noopener", title: label },
+                         h("img", { src: url, alt: label }))
+                     : h("a", { title: label }));
+    });
+  }
+
+  function renderCheck() {
+    var box = $("checkOut");
+    box.textContent = "";
+    var r = lastCheck;
+    if (!r) return;
+    box.append(h("b", { class: r.ok ? "" : "bad", text: r.ok ? t("checkOk") : t("checkBad") }));
+    if (r.ok || r.images) {
+      box.append(h("div", { text: t("toRender", { n: r.images }) + (r.skipped ? " · " + t("saved", { n: r.skipped }) : "") }));
+      if (r.per_batch && r.per_batch.length > 1) {
+        box.append(h("div", { class: "muted", text: r.per_batch.map(function (b) {
+          return (b.name || "—") + " " + b.images;
+        }).join(" · ") }));
+      }
+    }
+    if (r.message) box.append(h("div", { class: "muted", text: t("nothing") }));
+    if (r.errors && r.errors.length) {
+      box.append(h("b", { class: "bad", text: t("errors") }));
+      box.append(h("ul", { class: "list-s errors" }, r.errors.map(function (e) { return h("li", { text: e }); })));
+    }
+    if (r.warnings && r.warnings.length) {
+      box.append(h("b", { text: t("warnings") }));
+      box.append(h("ul", { class: "list-s warnings" }, r.warnings.map(function (e) { return h("li", { text: e }); })));
+    }
+    if (r.files && r.files.length) {
+      var counts = {};
+      r.files.forEach(function (f) { counts[f.how] = (counts[f.how] || 0) + 1; });
+      box.append(h("b", { text: t("files") + ": " + Object.keys(counts).map(function (k) {
+        return counts[k] + " " + t("how_" + k);
+      }).join(", ") }));
+      box.append(h("table", { class: "ftable" }, r.files.map(function (f) {
+        return h("tr", { title: f.source }, h("td", { class: "how" + (f.how === "missing" ? " bad" : ""), text: t("how_" + f.how) }),
+                 h("td", { text: f.dest }), h("td", { class: "how", text: bytes(f.size) }));
+      })));
+    }
+  }
+
+  function requestBody() {
+    var data = exportNow();
+    if (!data) return null;
+    return { project: data, target: target(), name: fileName || "ui",
+             overwrite: $("overwrite").checked, continue_on_error: $("keepGoing").checked,
+             max_hours: Number($("maxHours").value) || 3, secure: $("secure").checked };
+  }
+  function check() {
+    var body = requestBody();
+    if (!body) return;
+    $("checkBtn").disabled = true;
+    api("POST", "/api/check", body).then(function (r) { lastCheck = r; renderCheck(); })
+      .catch(function (e) { alert(e.message); })
+      .then(function () { $("checkBtn").disabled = false; });
+  }
+  function render() {
+    if (!STATUS || STATUS.busy || $("renderBtn").disabled) return;
+    var body = requestBody();
+    if (!body) return;
+    var conn = connState();
+    if (body.target === "runpod" && conn.state !== "ready" && !confirm(t("confirmRentRender"))) return;
+    if (body.overwrite && !confirm(t("confirmOverwrite"))) return;
+    api("POST", "/api/render", body).then(function (r) {
+      lastCheck = r;
+      renderCheck();
+      poll();
+    }).catch(function (e) { alert(e.message); });
+  }
+
+  // ── status polling ──────────────────────────────────────────────────
+  var polling = false;
+  function poll() {
+    if (polling) return;
+    polling = true;
+    api("GET", "/api/status").then(function (st) {
+      skew = st.now - Date.now() / 1000;
+      STATUS = st;
+      var key = st.target + ":" + st.connection.state;
+      if (key !== lastState) {
+        lastState = key;
+        if (st.connection.state === "ready" && st.target === target()) loadChoices();
+      }
+    }).catch(function () { STATUS = false; }).then(function () {
+      polling = false;
+      if (META && project) renderSide();
+    });
+  }
+
+  // ── dialogs ─────────────────────────────────────────────────────────
+  function dialog(id) {
+    var el = $(id);
+    var box = el.querySelector(".box");
+    box.textContent = "";
+    el.hidden = false;
+    return box;
+  }
+  function closeDialog(id) {
+    var el = $(id);
+    el.hidden = true;
+    el.querySelector(".box").textContent = "";  // no typed key stays in the page
+  }
+
+  // ── settings (.env) ─────────────────────────────────────────────────
+  var SECRET_FIELDS = [
+    { key: "RUNPOD_API_KEY", label: "setRunpod", hint: "setRunpodHint", test: "runpod" },
+    { key: "HF_TOKEN", label: "setHf", hint: "setHfHint", test: "hf" },
+    { key: "CIVITAI_TOKEN", label: "setCivitai", hint: "setCivitaiHint" }
+  ];
+  function openSettings() {
+    api("GET", "/api/settings").then(renderSettings).catch(function (e) { alert(e.message); });
+  }
+  function renderSettings(data) {
+    var box = dialog("settingsBox");
+    var cleared = {};
+    var inputs = {};
+    var message = h("div", { class: "hint" });
+    var envNote = function (from) {
+      return from && h("div", { class: "hint warnline", text: t("setFromEnv") });
+    };
+    box.append(h("b", { text: t("settings") }),
+               h("div", { class: "hint", text: t("setWhere", { file: data.file }) }));
+    SECRET_FIELDS.forEach(function (f) {
+      var state = data.secrets[f.key];
+      var tag = h("span", { class: "tag" + (state.set ? " oktag" : ""),
+                            text: state.set ? t("setIsSet") : t("setNotSet") });
+      var input = h("input", { type: "password", autocomplete: "new-password", spellcheck: "false",
+                               placeholder: state.set ? t("setKeep") : t("setPaste") });
+      inputs[f.key] = input;
+      var result = h("span", { class: "muted" });
+      var clear = h("button", { text: t("setClear"), disabled: !state.set, onclick: function () {
+        cleared[f.key] = !cleared[f.key];
+        clear.classList.toggle("on", cleared[f.key]);
+        tag.textContent = cleared[f.key] ? t("setWillClear") : (state.set ? t("setIsSet") : t("setNotSet"));
+        input.value = "";
+        input.disabled = cleared[f.key];
+      } });
+      var test = f.test && h("button", { text: t("setTest"), onclick: function () {
+        result.textContent = "…";
+        result.className = "muted";
+        var body = { which: f.test };
+        if (input.value.trim()) body.value = input.value.trim();
+        api("POST", "/api/settings/test", body).then(function (r) {
+          result.textContent = r.message;
+          result.className = r.ok ? "ok" : "bad";
+        }).catch(function (e) { result.textContent = e.message; result.className = "bad"; });
+      } });
+      box.append(h("div", { class: "setrow" },
+        h("label", { class: "setlab", text: t(f.label) }), tag,
+        h("div", { class: "line" }, input, clear, test, result),
+        h("div", { class: "hint", text: t(f.hint) }), envNote(state.from_environment)));
+    });
+    var plain = function (key, label, hint, node) {
+      var v = data.values[key];
+      var input = node || h("input", { spellcheck: "false", value: v.value,
+                                       placeholder: (data.defaults[key] || "") });
+      if (node) node.value = v.value;
+      input.dataset.was = v.value;
+      inputs[key] = input;
+      return h("div", { class: "setrow" }, h("label", { class: "setlab", text: t(label) }),
+               input, hint && h("div", { class: "hint", text: t(hint) }), envNote(v.from_environment));
+    };
+    box.append(plain("JENA_STORAGE", "setStorage", "setStorageHint"),
+      plain("JENA_TARGET", "setTarget", "setTargetHint",
+            h("select", {}, h("option", { value: "", text: t("setTargetDefault") }),
+              h("option", { value: "local", text: t("local") }),
+              h("option", { value: "runpod", text: t("runpod") }))),
+      plain("JENA_COMFY_URL", "comfyUrl", ""),
+      h("details", { class: "extra" }, h("summary", { text: t("setAdvanced") }),
+        plain("JENA_POD_IMAGE", "setPodImage", "setPodImageHint"),
+        plain("JENA_MODELS_DIR", "setModelsDir", "setModelsDirHint")));
+    var save = h("button", { class: "primary", text: t("save"), onclick: function () {
+      var values = {};
+      SECRET_FIELDS.forEach(function (f) {
+        var typed = inputs[f.key].value.trim();
+        if (typed) values[f.key] = typed;
+        else if (cleared[f.key]) values[f.key] = null;
+      });
+      Object.keys(data.values).forEach(function (key) {
+        var now = inputs[key].value.trim();
+        if (now !== inputs[key].dataset.was) values[key] = now || null;
+      });
+      save.disabled = true;
+      api("POST", "/api/settings", { values: values }).then(function () {
+        closeDialog("settingsBox");
+        return api("GET", "/api/meta");
+      }).then(function (meta) {
+        var oldUrl = META.settings.comfy_url;
+        META = meta;
+        if ($("comfyUrl").value === oldUrl) $("comfyUrl").value = meta.settings.comfy_url;
+        toast(t("setSaved", { file: data.file }));
+        renderSide();
+        loadChoices(true);
+      }).catch(function (e) {
+        save.disabled = false;
+        message.textContent = e.message;
+        message.className = "hint bad";
+      });
+    } });
+    box.append(message, h("div", { class: "row2 end" },
+      h("button", { text: t("cancel"), onclick: function () { closeDialog("settingsBox"); } }), save));
+  }
+
+  // ── file browser: pick a weight file on this computer ───────────────
+  var BROWSE = null;
+  function openBrowser(kind, t_, done) {
+    var eng = oneEngine(tabEngines(t_));
+    BROWSE = {
+      kind: kind, done: done, data: null, chosen: "", filter: "",
+      onlyEngine: kind === "loras" && !!eng, engine: eng ? eng.name : "",
+      modelKind: eng && eng.name !== "illustrious" ? "diffusion_models" : "checkpoints",
+      modelEngine: eng && eng.name !== "illustrious" ? eng.name : "zimage",
+      message: ""
+    };
+    var start = store.get("jenair.browse." + kind) || "";
+    browseTo(start);
+  }
+  function browseKind() { return BROWSE.kind === "loras" ? "loras" : BROWSE.modelKind; }
+  function browseTo(path) {
+    api("GET", "/api/browse?kind=" + browseKind() + "&path=" + encodeURIComponent(path || ""))
+      .then(function (data) {
+        BROWSE.data = data;
+        BROWSE.chosen = "";
+        if (data.ok) store.set("jenair.browse." + BROWSE.kind, data.path);
+        renderBrowser();
+      }).catch(function (e) {
+        if (path) { browseTo(""); return; }  // a remembered folder that is gone
+        alert(e.message);
+      });
+  }
+  function joinPath(dir, name) {
+    var sep = dir.indexOf("\\") >= 0 && dir.charAt(0) !== "/" ? "\\" : "/";
+    return dir.charAt(dir.length - 1) === sep ? dir + name : dir + sep + name;
+  }
+  function crumbs(path) {
+    var win = path.indexOf("\\") >= 0 && path.charAt(0) !== "/";
+    var sep = win ? "\\" : "/";
+    var parts = path.split(sep).filter(Boolean);
+    var out = [];
+    var acc = win ? "" : "/";
+    if (!win) out.push({ name: "/", path: "/" });
+    parts.forEach(function (part, i) {
+      acc = win && i === 0 ? part + "\\" : joinPath(acc, part);
+      out.push({ name: part, path: acc });
+    });
+    return out;
+  }
+  function renderBrowser() {
+    var B = BROWSE, d = B.data;
+    var box = dialog("browser");
+    var title = B.kind === "loras" ? t("brTitleLora") : t("brTitleModel");
+    var places = h("div", { class: "places" }, d.places.map(function (p) {
+      return h("button", { class: d.path === p.path ? "on" : "", text: p.name, title: p.path,
+                           onclick: function () { browseTo(p.path); } });
+    }));
+    var crumb = h("div", { class: "crumbs" }, crumbs(d.path).map(function (c, i) {
+      return [i > 1 ? h("span", { class: "muted", text: "/" }) : null,
+              h("button", { class: "icon", text: c.name, onclick: function () { browseTo(c.path); } })];
+    }));
+    var filter = h("input", { placeholder: t("brFilter"), value: B.filter, spellcheck: "false" });
+    var list = h("div", { class: "entries" });
+    var choose = h("button", { class: "primary", text: t("brSelect"), disabled: true, onclick: pick });
+    function fill() {
+      var q = B.filter.toLowerCase();
+      var match = function (n) { return !q || n.toLowerCase().indexOf(q) >= 0; };
+      list.textContent = "";
+      if (d.parent) list.append(h("div", { class: "entry dir", text: "↑ ..", ondblclick: function () { browseTo(d.parent); },
+                                           onclick: function () { browseTo(d.parent); } }));
+      d.dirs.filter(match).forEach(function (n) {
+        list.append(h("div", { class: "entry dir", text: "▸ " + n, onclick: function () { browseTo(joinPath(d.path, n)); } }));
+      });
+      d.files.filter(function (f) { return match(f.name); }).forEach(function (f) {
+        var full = joinPath(d.path, f.name);
+        var row = h("div", { class: "entry file" + (B.chosen === full ? " on" : "") },
+                    h("span", { text: f.name }), h("span", { class: "muted", text: bytes(f.size) }));
+        row.addEventListener("click", function () { B.chosen = full; choose.disabled = false; fill(); });
+        row.addEventListener("dblclick", function () { B.chosen = full; pick(); });
+        list.append(row);
+      });
+      if (!d.ok) list.append(h("div", { class: "hint bad", text: d.message }));
+      else if (!d.dirs.length && !d.files.length) list.append(h("div", { class: "hint", text: t("brEmpty") }));
+    }
+    filter.addEventListener("input", function () { B.filter = filter.value; fill(); });
+    fill();
+    var options;
+    if (B.kind === "loras") {
+      var only = h("input", { type: "checkbox", checked: B.onlyEngine, disabled: !B.engine });
+      only.addEventListener("change", function () { B.onlyEngine = only.checked; });
+      options = h("label", { title: t("brOnlyHint") }, only,
+                  B.engine ? t("brOnly", { engine: B.engine }) : t("brNoEngine"));
+    } else {
+      var radio = function (value, label) {
+        var r = h("input", { type: "radio", name: "brkind", checked: B.modelKind === value });
+        r.addEventListener("change", function () { B.modelKind = value; browseTo(d.path); });
+        return h("label", {}, r, label);
+      };
+      var engineSel = h("select", {}, META.engines.filter(function (e) { return e.name !== "illustrious"; })
+        .map(function (e) { return h("option", { value: e.name, text: e.name }); }));
+      engineSel.value = B.modelEngine;
+      engineSel.addEventListener("change", function () { B.modelEngine = engineSel.value; });
+      options = h("div", { class: "line" }, radio("checkpoints", t("brCheckpoint")),
+                  radio("diffusion_models", t("brDiffusion")), engineSel);
+    }
+    var status = h("div", { class: "hint" + (B.message ? " bad" : ""), text: B.message || t("brHow") });
+    box.append(h("b", { text: title }),
+      h("div", { class: "browse" }, places,
+        h("div", { class: "main" }, crumb, filter, list)),
+      options, status,
+      h("div", { class: "row2 end" },
+        h("button", { text: t("cancel"), onclick: function () { closeDialog("browser"); } }), choose));
+    filter.focus();
+
+    function pick(replace) {
+      if (!B.chosen) return;
+      var body = { path: B.chosen, kind: browseKind(), replace: replace === true };
+      if (B.kind === "loras" && B.onlyEngine && B.engine) body.engine = B.engine;
+      if (B.kind !== "loras" && B.modelKind === "diffusion_models") body.engine = B.modelEngine;
+      choose.disabled = true;
+      api("POST", "/api/import", body).then(function (r) {
+        closeDialog("browser");
+        B.done(r);
+      }).catch(function (e) {
+        choose.disabled = false;
+        if (e.status === 409 && /replace/.test(e.message) && replace !== true &&
+            confirm(e.message + "\n\n" + t("brReplace"))) { pick(true); return; }
+        B.message = e.message;
+        status.textContent = e.message;
+        status.className = "hint bad";
+      });
+    }
+  }
+  function importNote(r) {
+    var folder = r.dest.slice(0, r.dest.lastIndexOf("/") + 1);
+    var key = { "linked": "imLinked", "hard-linked": "imHard", "copied": "imCopied" }[r.how] || "imThere";
+    return t(key, { folder: folder, name: r.name });
+  }
+  function afterImport(t_, apply) {
+    return function (r) {
+      apply(r.name);
+      t_.note = importNote(r);
+      touch(true);
+      loadChoices(true).then(renderEditor);
+    };
+  }
+
+  // ── wiring ──────────────────────────────────────────────────────────
+  function wire() {
+    $("newBtn").onclick = function () {
+      if (dirty && !confirm(t("confirmDiscard"))) return;
+      project = { target: project.target, output: "", extra: {}, tabs: [blankTab("batch1")] };
+      active = 0; fileName = ""; sourceLabel = ""; dirty = false; lastCheck = null;
+      renderAll();
+      saveDraft();
+    };
+    $("openBtn").onclick = toggleOpen;
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest(".menu")) $("openList").hidden = true;
+    });
+    $("saveBtn").onclick = function () { saveFile(false); };
+    $("saveAsBtn").onclick = function () { saveFile(true); };
+    $("importBtn").onclick = function () { $("importFile").value = ""; $("importFile").click(); };
+    $("importFile").onchange = function () {
+      var file = $("importFile").files[0];
+      if (!file) return;
+      if (dirty && !confirm(t("confirmDiscard"))) return;
+      importFile(file);
+    };
+    $("exportBtn").onclick = exportFile;
+    $("output").addEventListener("input", function () { project.output = $("output").value.trim(); touch(); });
+    $("langBtn").onclick = function () {
+      lang = lang === "ko" ? "en" : "ko";
+      store.set("jenair.lang", lang);
+      renderAll();
+    };
+    Array.prototype.forEach.call(document.querySelectorAll('input[name="target"]'), function (r) {
+      r.addEventListener("change", function () {
+        project.target = r.value;
+        touch();
+        renderSide();
+        loadChoices();
+      });
+    });
+    $("connectBtn").onclick = connect;
+    $("disconnectBtn").onclick = disconnect;
+    $("checkBtn").onclick = check;
+    $("renderBtn").onclick = render;
+    $("cancelBtn").onclick = function () { api("POST", "/api/cancel", {}).then(poll).catch(function (e) { alert(e.message); }); };
+    $("modalCancel").onclick = function () { $("modal").hidden = true; };
+    $("settingsBtn").onclick = openSettings;
+    window.addEventListener("keydown", function (e) {
+      if (e.key !== "Escape") return;
+      ["browser", "settingsBox"].forEach(function (id) { if (!$(id).hidden) closeDialog(id); });
+      $("modal").hidden = true;
+    });
+    $("editor").addEventListener("focusout", function () {
+      setTimeout(function () {
+        if (editorStale && !$("editor").contains(document.activeElement)) renderEditor();
+      }, 0);
+    });
+    window.addEventListener("keydown", function (e) {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      if (e.key === "s" || e.key === "S") { e.preventDefault(); saveFile(false); }
+      if (e.key === "Enter") { e.preventDefault(); render(); }
+    });
+    window.addEventListener("beforeunload", function (e) {
+      if (!dirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    });
+  }
+
+  function start() {
+    applyLang();
+    wire();
+    api("GET", "/api/meta").then(function (meta) {
+      META = meta;
+      META.samplers.forEach(function (s) { $("dlSamplers").append(h("option", { value: s })); });
+      META.schedulers.forEach(function (s) { $("dlSchedulers").append(h("option", { value: s })); });
+      var draft = null;
+      try { draft = JSON.parse(store.get("jenair.draft") || "null"); } catch (e) { draft = null; }
+      if (draft && draft.project && Array.isArray(draft.project.tabs) && draft.project.tabs.length) {
+        project = draft.project;
+        project.tabs.forEach(function (t_) {
+          uid = Math.max(uid, (t_.id || 0) + 1);
+          t_.prompts.forEach(function (p) { uid = Math.max(uid, (p.id || 0) + 1); });
+        });
+        fileName = draft.fileName || "";
+        sourceLabel = draft.sourceLabel || "";
+        dirty = !!draft.dirty;
+      } else {
+        project = { target: "", output: "", extra: {}, tabs: [blankTab("batch1")] };
+      }
+      renderAll();
+      loadChoices();
+      poll();
+      setInterval(poll, 1000);
+    }).catch(function (e) {
+      $("editor").textContent = e.message + " — " + t("serverDown");
+    });
+  }
+  start();
+})();
+</script>
+</body>
+</html>

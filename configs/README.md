@@ -9,6 +9,9 @@ jenair configs/full.json             # render on your own ComfyUI (start it firs
 jenair configs/full.json --runpod    # or on a rented GPU
 ```
 
+`jenair ui` opens any of them in a page in your browser (Open ▾ → Examples);
+see [docs/ui.md](../docs/ui.md).
+
 ## [full.json](full.json) — the dictionary
 
 Every key and every form this tool understands, in one file. Do not read it
@@ -16,20 +19,23 @@ top to bottom: look up what you need and copy that job.
 
 | group | what is there |
 |---|---|
-| top level | `target`, `output`, `defaults`, `jobs` |
-| `defaults` | model, LoRAs, negative prompt, size, seeds, `steps`, `cfg`, `sampler`, `scheduler` — written once for all jobs |
+| top level | `target`, `output`, `defaults` (shared by every batch), `batches` |
+| `batches` | one batch per engine (illustrious, krea2, zimage), several models in one batch, a skipped batch; each batch's `name` is its output folder |
+| batch `defaults` | model, LoRAs, negative prompt, size, `steps`, `cfg`, `sampler`, `scheduler` — written once for the batch's jobs |
 | size | another `aspect`; exact `width`/`height` |
 | seeds | one `seed`; a `seeds` list |
 | sampling | `steps`, `cfg`, ComfyUI sampler + `scheduler`; a model-card sampler name |
 | negative | another negative prompt; none (`""`) |
 | LoRAs | replace and add; `{name, scale, trigger}`; no trigger (`""`); no LoRA (`[]`); a LoRA by address |
-| models | another engine (`null` = back to the engine default); several models; a checkpoint by address; a model as an object |
+| models | a sampler `null` handed back to the engine default; several models; a checkpoint by address; a model as an object |
 | your files | a checkpoint, a LoRA and a fine-tune from `models/` (skipped until the file is there) |
-| `skip` | keep a job without rendering it |
+| `skip` | keep a job, or a whole batch, without rendering it |
 
-The rule it shows: **a job starts from `defaults` and repeats a key only to
-change it; the job's value replaces the default as a whole. `null` hands a
-setting back to the engine's own default.**
+The rule it shows: **a job starts from the top-level `defaults` with its
+batch's `defaults` laid over them, and repeats a key only to change it; each
+value replaces the one before it as a whole. `null` hands a setting back to the
+engine's own default.** With a single batch, `defaults` + `jobs` at the top
+level do the same ([02-batch](basics/02-batch.json)).
 
 ## basics/ — one idea per file
 
@@ -47,6 +53,7 @@ downloads them into it.
 | [06-sampling](basics/06-sampling.json) | `steps`, `cfg`, `sampler`, `scheduler`, `negative`, a speed LoRA |
 | [07-target](basics/07-target.json) | `target`: your ComfyUI (default) or a rented RunPod GPU |
 | [08-from-url](basics/08-from-url.json) | files that are online, by address: a LoRA, a checkpoint, a model object |
+| [09-batches](basics/09-batches.json) | `batches`: two groups of jobs with their own settings, one output folder each |
 
 ## engines/ — one file per engine
 

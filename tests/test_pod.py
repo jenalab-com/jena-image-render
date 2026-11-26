@@ -116,6 +116,37 @@ class PodTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unknown keys"):
             pod.Settings.load(path)
 
+    def test_phases_are_reported(self) -> None:
+        api = FakeAPI(["p1"])
+        api.get_pod = lambda pod_id: {"desiredStatus": "RUNNING",
+                                      "runtime": {"uptimeInSeconds": 3}}
+        answers = iter([False, False, True])
+        events = []
+        session = self.pods(api, ready=lambda s: next(answers)).start(
+            max_hours=2, progress=events.append)
+        phases = [e["phase"] for e in events]
+        self.assertEqual(phases[0], "renting")
+        self.assertEqual(events[0]["cloud"], "community")
+        self.assertEqual(phases[-1], "ready")
+        self.assertIn("starting ComfyUI", phases)
+        self.assertEqual(events[-1]["pod_id"], "p1")
+        self.assertEqual(events[-1]["typical_seconds"], pod.TYPICAL_START_SECONDS)
+        self.assertEqual(session["max_hours"], 2)
+
+    def test_should_stop_terminates_the_starting_pod(self) -> None:
+        api = FakeAPI(["p1"])
+        asked = []
+
+        def stop() -> bool:
+            asked.append(1)
+            return len(asked) > 2
+
+        with self.assertRaises(pod.Cancelled):
+            self.pods(api, ready=lambda s: False).start(max_hours=1, should_stop=stop)
+        self.assertEqual(api.terminated, ["p1"])
+        self.assertEqual(len(api.created), 1)  # no Secure attempt after a cancel
+        self.assertIsNone(self.sessions.load())
+
 
 if __name__ == "__main__":
     unittest.main()

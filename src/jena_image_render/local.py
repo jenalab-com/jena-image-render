@@ -156,16 +156,32 @@ def fill(
     hashes: Hashes,
     hf_token: str = "",
     opener: Callable[..., Any] | None = None,
+    progress: Callable[[dict[str, Any]], None] | None = None,
 ) -> None:
-    """Link and download what the plan says, then check ComfyUI lists it all."""
+    """Link and download what the plan says, then check ComfyUI lists it all.
+
+    `progress` hears {"dest", "how", "bytes", "total", "status"} per file."""
+
+    def report(spec: FileSpec, how: str, done: int, total: int, status: str) -> None:
+        if progress is not None:
+            progress({"dest": spec.dest, "how": how, "bytes": done, "total": total,
+                      "status": status})
+
     for how, spec in steps:
         if how == "link":
             link(Path(spec.local), places[spec.dest])
+            report(spec, "link", 0, 0, "done")
     downloads = [spec for how, spec in steps if how == "download"]
     if downloads:
         LOGGER.info("%s", _summary(downloads, places))
     for spec in downloads:
-        pull_one(spec, places[spec.dest], hashes, hf_token, opener)
+
+        def got(done: int, total: int, spec: FileSpec = spec) -> None:
+            report(spec, "download", done, total, "downloading")
+
+        pull_one(spec, places[spec.dest], hashes, hf_token, opener,
+                 got if progress is not None else None)
+        report(spec, "download", spec.size, spec.size, "done")
     names.forget()
     for _, spec in steps:
         names.find(spec)
